@@ -236,6 +236,20 @@ body { -webkit-user-select: none; user-select: none; }
 .tile--all.is-on { --c: var(--edge); --ci: #FFFFFF; }
 [data-theme="night"] .tile--all.is-on { --c: var(--ink); --ci: var(--edge); }
 
+/* Brand tiles sit after a divider. Dark so they read as a different axis of
+   filtering from the coloured category tiles. */
+.rail__sep {
+  flex: 0 0 auto;
+  width: var(--bw);
+  align-self: stretch;
+  margin: 4px 4px;
+  background: var(--line-soft);
+  border-radius: 2px;
+}
+.tile--brand { --c: var(--edge); --ci: #FFFFFF; }
+[data-theme="night"] .tile--brand { --c: #3A3A3A; --ci: var(--ink); }
+.tile--brand.is-on { --c: var(--hi-vis); --ci: var(--edge); }
+
 /* ------------------------------------------------------------- 5. READOUT */
 .readout {
   display: flex;

@@ -6,23 +6,25 @@ find mechanics, spare-part shops, air points, tow vans and safe parking, then ha
 coordinates to the native Google Maps app in one tap. Hosted free on GitHub Pages.
 
 ## Dataset
-- **317 places across 173 real Kolkata localities**, in two kinds:
-  - **60 verified listings** (`contact: true`) — authorised Hero / Honda / TVS / Bajaj /
-    Royal Enfield service centres with real, publicly-published numbers. `hours: null`,
-    so they show a yellow dot and CALL AHEAD. Each carries `src` provenance.
-  - **257 seed records** — geography real, everything else synthetic. Phone placeholders
-    follow `+91 98300 0xxxx`.
-- **The `contact` flag arms the CALL button.** `contact: true` → live. Otherwise the button
-  is disabled, greyed and relabelled "NO NUMBER ON FILE" — **never removed**, so the layout
-  never shifts. `isPlaceholderPhone()` stays as a backstop so a mis-flagged record can never
-  dial a seed number.
-- **Never fabricate opening hours for a real business.** `hours: null` is the honest answer
-  and the app renders it as "unknown" (yellow). Do not fill in plausible hours for the
-  verified listings.
-- Mix: mechanic 136, air 50, structural 37, control 36, parking 29, tow 29.
-- Sorted **callable first** (`sortRank()`: callable 0, open 1, unknown 2, shut 3). Seed hours
-  are generated and almost always evaluate to "open", so without this the actionable records
-  sink to the bottom of the list.
+- **125 REAL listings only. No fabricated records.** `assets/js/data.js` contains nothing
+  synthetic.
+  - Brands: Royal Enfield 26, Bajaj 21, Hero 18, TVS 15, Honda 14, Yamaha 13, Suzuki 12,
+    KTM 3, plus 3 towing operators. 78 localities.
+  - 123 of 125 have a published phone number. The other 2 (Honda BigWing Bouchtala,
+    TowMigo) have `contact: false` and a visibly disabled CALL button.
+  - All are authorised service centres sourced 2026-09-18 from manufacturer ASC
+    directories, public authorised-dealer directories, Royal Enfield's own dealer locator,
+    and the towing operators' own sites. Each record stores `src`.
+- **`assets/js/seed-records.js` holds the 257 archived placeholder records.** It is NOT
+  referenced by `index.html` — preserved on disk so nothing was deleted, zero download cost.
+  Do not add it back to index.html.
+- **`hours: null` on every record.** These directories do not publish opening times, so the
+  app shows a yellow dot and `CALL AHEAD` rather than inventing a state. Never fabricate hours
+  for a real business.
+- **Pin dot semantics:** yellow = hours unknown but callable; red = no number on file.
+- **`contact: true` is the only thing that arms CALL.** Never set it on an unverified number.
+- **Known gap: no puncture shops, tyre dealers or air points.** Numbers for those could not be
+  verified, so the app hides the empty category filters rather than inventing listings.
 
 ## Repo
 - Remote: `git@github.com:rounak-adhikary-github/two-wheeler-sos-map.git`, branch **`master`**

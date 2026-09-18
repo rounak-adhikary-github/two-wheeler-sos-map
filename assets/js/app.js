@@ -78,6 +78,7 @@
   /* ------------------------------------------------------------------ STATE */
   var state = {
     cat: 'all',
+    brand: null,
     sel: null,
     user: null,
     snap: 'peek',
@@ -153,10 +154,17 @@
     return h >= o || h < c; /* overnight shift */
   }
 
-  /* 'open' | 'shut' | 'unknown' — drives the pin dot and the status banner. */
+  /* 'open' | 'shut' | 'unknown' — drives the status banner. */
   function statusKind(p) {
     if (!hasHours(p)) return 'unknown';
     return isOpenNow(p) ? 'open' : 'shut';
+  }
+
+  /* The pin dot. Yellow means "hours unknown, ring before you ride over".
+     Red means there is no number on file at all, so you must go in person. */
+  function pinDotKind(p) {
+    if (hasHours(p)) return isOpenNow(p) ? 'open' : 'shut';
+    return hasRealContact(p) ? 'unknown' : 'shut';
   }
 
   function statusText(p) {
@@ -207,28 +215,39 @@
   }
 
   function visiblePlaces() {
-    if (state.cat === 'all') return D.places.slice();
-    return D.places.filter(function (p) { return p.cats.indexOf(state.cat) !== -1; });
+    return D.places.filter(function (p) {
+      if (state.brand && p.brand !== state.brand) return false;
+      if (state.cat !== 'all' && p.cats.indexOf(state.cat) === -1) return false;
+      return true;
+    });
   }
 
-  /* Sort priority. Verified listings come first: they are the only records a
-     rider can actually act on, because their number is real. The seed records'
-     open/closed state is generated, so it is a weaker signal than that. */
-  function sortRank(p) {
-    if (hasRealContact(p)) return 0;
-    var k = statusKind(p);
-    return k === 'open' ? 1 : (k === 'unknown' ? 2 : 3);
+  /* Brands present in the dataset, in a fixed order. */
+  function brandList() {
+    var seen = {}, out = [];
+    D.places.forEach(function (p) {
+      if (p.brand && !seen[p.brand]) { seen[p.brand] = 1; out.push(p.brand); }
+    });
+    return out;
   }
 
+  /* Tiles are narrow, so long brand names get a short form. */
+  var BRAND_SHORT = { 'ROYAL ENFIELD': 'ENFIELD', 'TOWING': 'TOWING' };
+  function brandShort(b) { return BRAND_SHORT[b] || b; }
+
+  /* Callable records first — the only ones a rider can act on from the roadside.
+     Then grouped by brand, which is how riders actually think about this
+     ("I ride a Honda, who services Hondas?"). */
   function sortedPlaces() {
     var list = visiblePlaces();
     if (state.user) {
       list.sort(function (a, b) { return distTo(a) - distTo(b); });
     } else {
       list.sort(function (a, b) {
-        var ra = sortRank(a), rb = sortRank(b);
-        if (ra !== rb) return ra - rb;
-        return (b.checks || 0) - (a.checks || 0);
+        var ca = hasRealContact(a) ? 0 : 1, cb = hasRealContact(b) ? 0 : 1;
+        if (ca !== cb) return ca - cb;
+        if (a.brand !== b.brand) return String(a.brand).localeCompare(String(b.brand));
+        return String(a.name).localeCompare(String(b.name));
       });
     }
     return list;
@@ -266,7 +285,7 @@
 
   function pinHtml(p, selected) {
     var c = visualCat(p);
-    var k = statusKind(p);
+    var k = pinDotKind(p);
     var cls = k === 'shut' ? ' pin--shut' : (k === 'unknown' ? ' pin--unk' : '');
     return '<div class="pin' + cls + (selected ? ' pin--sel' : '') + '"' +
            ' style="--c:' + c.color + ';--ci:' + c.ink + '">' +
@@ -371,7 +390,7 @@
       if (show) {
         if (!map.hasLayer(m)) m.addTo(map);
         var c = visualCat(p);
-        var key = c.id + '|' + statusKind(p) + '|' + (isSel ? 1 : 0);
+        var key = c.id + '|' + pinDotKind(p) + '|' + (isSel ? 1 : 0);
         if (m._sosKey !== key) {
           m._sosKey = key;
           m.setIcon(L.divIcon({ className: '', html: pinHtml(p, isSel), iconSize: [46, 46], iconAnchor: [23, 23] }));
@@ -434,34 +453,65 @@
   }
 
   /* ---------------------------------------------------------------- FILTER */
+  var noFilter = function () { return state.cat === 'all' && !state.brand; };
+
   function renderRail() {
-    var html = '<button type="button" class="tile tile--all' + (state.cat === 'all' ? ' is-on' : '') + '" data-cat="all">' +
+    var html = '<button type="button" class="tile tile--all' + (noFilter() ? ' is-on' : '') + '" data-cat="all">' +
       '<span class="tile__ico">' + svg('all') + '</span>' +
       '<span class="tile__lbl">SHOW<br>ALL</span>' +
       '<span class="tile__n">' + D.places.length + '</span></button>';
 
+    /* Only categories that actually have records — an empty filter is a dead end. */
     D.categories.forEach(function (c) {
       var n = D.places.filter(function (p) { return p.cats.indexOf(c.id) !== -1; }).length;
+      if (!n) return;
       html += '<button type="button" class="tile' + (state.cat === c.id ? ' is-on' : '') + '"' +
         ' data-cat="' + c.id + '" style="--c:' + c.color + ';--ci:' + c.ink + '">' +
         '<span class="tile__ico">' + svg(c.id) + '</span>' +
         '<span class="tile__lbl">' + esc(c.tile) + '</span>' +
         '<span class="tile__n">' + n + '</span></button>';
     });
+
+    /* Then one tile per manufacturer. With every listing being an authorised
+       service centre, brand is the filter riders actually reach for. */
+    var brands = brandList();
+    if (brands.length) {
+      html += '<span class="rail__sep" aria-hidden="true"></span>';
+      brands.forEach(function (b) {
+        var n = D.places.filter(function (p) { return p.brand === b; }).length;
+        html += '<button type="button" class="tile tile--brand' + (state.brand === b ? ' is-on' : '') + '"' +
+          ' data-brand="' + esc(b) + '">' +
+          '<span class="tile__ico">' + svg('mechanic') + '</span>' +
+          '<span class="tile__lbl">' + esc(brandShort(b)) + '</span>' +
+          '<span class="tile__n">' + n + '</span></button>';
+      });
+    }
     rail.innerHTML = html;
   }
 
-  rail.addEventListener('click', function (e) {
-    var t = e.target.closest('.tile');
-    if (!t) return;
-    var id = t.getAttribute('data-cat');
-    state.cat = (state.cat === id && id !== 'all') ? 'all' : id;
+  function applyFilter() {
     renderRail();
     layoutPins();
     renderList(true);
     updateReadout();
     var list = sortedPlaces();
     if (list.length) fitToPlaces(list, true);
+  }
+
+  rail.addEventListener('click', function (e) {
+    var t = e.target.closest('.tile');
+    if (!t) return;
+    var brand = t.getAttribute('data-brand');
+    if (brand) {
+      /* Brand and category are mutually exclusive — one question at a time. */
+      state.brand = (state.brand === brand) ? null : brand;
+      state.cat = 'all';
+    } else {
+      var id = t.getAttribute('data-cat');
+      state.cat = (state.cat === id && id !== 'all') ? 'all' : id;
+      state.brand = null;
+    }
+    applyFilter();
   });
 
   /* ---------------------------------------------------------------- LIST */
@@ -505,7 +555,8 @@
 
   function renderList(resetPage) {
     var list = sortedPlaces();
-    var sortNote = state.user ? 'NEAREST FIRST' : 'CALLABLE FIRST';
+    var sortNote = state.user ? 'NEAREST FIRST'
+      : (state.brand ? state.brand + ' SERVICE' : 'CALLABLE FIRST');
     if (resetPage) listShown = LIST_PAGE;
 
     if (!list.length) {
@@ -560,15 +611,15 @@
         : '<div class="status is-unk"><span class="status__dot"></span><span>HOURS NOT CONFIRMED</span>' +
           '<span class="status__sub">' + esc(statusText(p)) + '</span></div>');
 
-    /* Verified listings get a provenance line. Seed records get a warning that
-       explains why their call button is dead. */
+    /* Provenance line for records that have a number, and a plain explanation
+       for the couple that do not. */
     var banner = callable
-      ? '<div class="srcstrip"><b>LISTED NUMBER</b>' + esc(p.src || 'Publicly listed') +
+      ? '<div class="srcstrip"><b>PUBLISHED NUMBER</b>' + esc(p.src || 'Publicly listed') +
         ' · captured ' + esc(shortDate(p.verified)) + '. Ring ahead before you tow.</div>'
-      : '<div class="warnstrip"><b>SEED RECORD — NO REAL NUMBER</b>' +
-        'This is a placeholder entry, so <b>CALL IS DISABLED</b> for it — dialling would reach a ' +
-        'stranger. Replace it in <code>assets/js/data.js</code> with a real, consented listing ' +
-        'and the call button activates.</div>';
+      : '<div class="warnstrip"><b>NO NUMBER PUBLISHED</b>' +
+        'This is a real business, but no phone number for it appeared in the source ' +
+        'directory, so <b>CALL IS DISABLED</b>. Ride over, or add a number in ' +
+        '<code>assets/js/data.js</code> and set <code>contact: true</code>.</div>';
 
     viewDetail.innerHTML =
       '<button type="button" class="btn btn--ghost btn--sm" id="btn-back">' +
@@ -653,9 +704,8 @@
   /* ------------------------------------------------------------- READOUT */
   function updateReadout() {
     var list = visiblePlaces();
-    var open = list.filter(function (p) { return statusKind(p) === 'open'; }).length;
     var callable = list.filter(hasRealContact).length;
-    readoutRight.textContent = open + ' OPEN · ' + callable + ' CALLABLE · ' + list.length + ' TOTAL';
+    readoutRight.textContent = callable + ' CALLABLE · ' + list.length + ' LISTED';
 
     if (!state.user) {
       readoutLeft.textContent = 'TAP ◎ TO FIND YOUR POSITION';
@@ -1035,10 +1085,11 @@
   $('btn-locate').addEventListener('click', locate);
 
   var callable = D.places.filter(hasRealContact).length;
-  $('stamp').innerHTML = D.places.length + ' PLACES ACROSS ' +
-    new Set(D.places.map(function (p) { return p.area; })).size + ' KOLKATA LOCALITIES · ' +
-    '<b>' + callable + ' WITH A REAL NUMBER</b> · ' + (D.places.length - callable) +
-    ' SEED RECORDS · LIST UPDATED <b>' + esc(D.meta.updated) + '</b>.';
+  var brands = brandList();
+  $('stamp').innerHTML = '<b>' + D.places.length + ' REAL LISTINGS</b> across ' +
+    new Set(D.places.map(function (p) { return p.area; })).size + ' Kolkata localities and ' +
+    brands.length + ' brands · <b>' + callable + ' have a phone number on file</b> · ' +
+    'captured <b>' + esc(D.meta.updated) + '</b> · no fabricated records.';
 
   window.addEventListener('resize', function () {
     layout();
