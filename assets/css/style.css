@@ -307,6 +307,8 @@ body { -webkit-user-select: none; user-select: none; }
   border: 3px solid var(--edge);
 }
 .pin--shut .pin__dot { background: var(--alert); }
+/* Hours not confirmed — neither green nor red would be honest. */
+.pin--unk .pin__dot { background: var(--hi-vis); }
 .pin--sel {
   transform: scale(1.3);
   z-index: 5;
@@ -551,7 +553,15 @@ body { -webkit-user-select: none; user-select: none; }
 }
 .chip--open   { background: var(--neon);  color: var(--edge); }
 .chip--shut   { background: var(--alert); color: #fff; }
+.chip--unk    { background: var(--hi-vis); color: var(--edge); }
 .chip--plain  { background: transparent; border-color: var(--line-soft); color: var(--ink-dim); }
+/* Brand of an authorised service centre */
+.chip--brand  { background: var(--surface-3); color: var(--ink); border-color: var(--line-soft); }
+
+/* Small phone glyph on list cards that actually have a number on file */
+.card__tel { display: inline-flex; width: 17px; height: 17px; color: var(--neon); }
+[data-theme="night"] .card__tel { color: var(--neon); }
+.card__tel svg { width: 100%; height: 100%; }
 
 /* ------------------------------------------------------------- 12. DETAIL */
 .detail__name {
@@ -585,6 +595,7 @@ body { -webkit-user-select: none; user-select: none; }
   margin-bottom: 12px;
 }
 .status.is-shut { background: var(--alert); color: #fff; }
+.status.is-unk  { background: var(--hi-vis); color: var(--edge); }
 .status__dot { width: 14px; height: 14px; border-radius: 50%; background: currentColor; flex: 0 0 auto; }
 .status__sub { margin-left: auto; font-size: 13px; font-weight: 600; opacity: .85; text-align: right; }
 
@@ -609,6 +620,28 @@ body { -webkit-user-select: none; user-select: none; }
   border-radius: 0 10px 10px 0;
   font-size: 15px;
   margin-bottom: 12px;
+}
+
+/* Provenance line on a verified listing. */
+.srcstrip {
+  border: 2px solid var(--line-soft);
+  border-left: 7px solid var(--neon);
+  border-radius: 0 10px 10px 0;
+  background: var(--surface-2);
+  padding: 9px 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink-dim);
+  margin-bottom: 12px;
+}
+.srcstrip b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 15px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-bottom: 3px;
 }
 
 /* Shown on any record whose phone number is still a seed placeholder. */
@@ -658,6 +691,16 @@ body { -webkit-user-select: none; user-select: none; }
   margin-bottom: 10px;
 }
 .btn:active { transform: translateY(5px); box-shadow: none; }
+/* Disabled state stays visible so the layout never shifts. */
+.btn[disabled], .btn.is-off {
+  background: var(--surface-3);
+  color: var(--ink-dim);
+  border-color: var(--line-soft);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+.btn[disabled]:active, .btn.is-off:active { transform: none; box-shadow: none; }
 .btn__ico { width: 26px; height: 26px; flex: 0 0 auto; }
 .btn--nav { background: var(--sos); color: var(--edge); min-height: var(--tap-lg); font-size: 23px; }
 .btn--call { background: var(--alert); color: #fff; }
@@ -732,6 +775,8 @@ body { -webkit-user-select: none; user-select: none; }
 }
 .dial__t { font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; line-height: 1.15; }
 .dial__t small { display: block; font-size: 11px; letter-spacing: .06em; opacity: .82; font-weight: 400; text-transform: none; }
+.dial--mfr    { background: #2F2F2F; }
+[data-theme="night"] .dial--mfr { background: #3A3A3A; }
 .dial--police { background: #1B4F9C; }
 .dial--fire   { background: #C1440E; }
 

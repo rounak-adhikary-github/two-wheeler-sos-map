@@ -22,17 +22,35 @@ a vibrating handlebar mount. Every design decision follows from that.
 | **Paged results** | 60 cards at a time, so a 250-place list stays smooth on a cheap phone |
 | **Offline shell** | A service worker caches the app and any map tiles you have already viewed |
 | **Day / night** | Auto-selects by time of day, manual toggle in the header |
-| **Emergency panel** | 112 / 100 / 108 / 1073 / 101 on 76px dial buttons, plus "send my pin by SMS" |
+| **Emergency panel** | 112 / 100 / 108 / 1073 / 101 on 76px dial buttons, plus Hero / Honda / TVS / Bajaj / Royal Enfield helplines, plus "send my pin by SMS" |
+| **Call button** | Live on the 60 verified listings, visibly disabled on the 257 seed records |
 
 ## Coverage
 
-**257 places across 157 named Kolkata localities**, spread from Barrackpore and Barasat in the
+**317 places across 173 named Kolkata localities**, spread from Barrackpore and Barasat in the
 north to Baruipur and Budge Budge in the south, and from Serampore and Domjur on the west bank
 to New Town and Hatiara in the east.
 
+They come in **two kinds**, and the app always tells you which is which:
+
+| | Verified listings | Seed records |
+|---|---|---|
+| **Count** | 60 | 257 |
+| **What it is** | Authorised Hero / Honda / TVS / Bajaj / Royal Enfield service centres | Community-shaped entries |
+| **Phone** | Real, publicly published | Synthetic placeholder |
+| **CALL button** | **Live** | **Disabled** |
+| **Hours** | Not confirmed — shows `CALL AHEAD` | Generated |
+| **Map dot** | Yellow | Green (open) / red (closed) |
+
+Verified listings are pulled from manufacturer authorised-service-centre directories and public
+dealer listings, captured 2026-09-18. Each one records its `src` in the data file and the detail
+panel shows that provenance.
+
+The list sorts **callable first**, so the records you can actually ring are always at the top.
+
 | Category | Listings |
 |---|---|
-| Mechanics | 76 |
+| Mechanics | 136 |
 | Flat tyre / air | 50 |
 | Structural spares (forks, T-stems, frames) | 37 |
 | Control spares (levers, cables, indicators) | 36 |
@@ -51,21 +69,22 @@ No build step, no npm, no framework. Push the files and turn Pages on.
 
 ```bash
 cd twoWheelerSOSMap
-git init
 git add .
 git commit -m "Two-Wheeler SOS Map for Kolkata"
-git branch -M main
-git remote add origin https://github.com/<your-username>/twoWheelerSOSMap.git
-git push -u origin main
+git push
 ```
 
 Then in the repository: **Settings → Pages → Build and deployment**
 - Source: `Deploy from a branch`
-- Branch: `main` · folder `/ (root)`
+- Branch: the branch you pushed to (`master` or `main`) · folder `/ (root)`
 - Save
 
-Your map goes live at `https://<your-username>.github.io/twoWheelerSOSMap/` in about a
-minute. Everything is relative-path based, so it also works from a project subpath.
+Your map goes live at `https://<your-username>.github.io/<repo-name>/` in about a minute.
+Everything is relative-path based, so it also works from a project subpath.
+
+> This repo is already wired to `origin`, so only the `git add / commit / push` steps are
+> needed on later edits. If you are starting from a fresh copy instead, run
+> `git init && git branch -M main && git remote add origin <url>` first.
 
 > The `.nojekyll` file is included so GitHub Pages serves the files verbatim.
 
@@ -87,20 +106,46 @@ Everything lives in **`assets/js/data.js`**. Nothing else needs to change.
 
 ```js
 {
-  id: 'sos-258',                                  // any unique string
+  id: 'sos-318',                                  // any unique string
   name: 'EXAMPLE MOTOR WORKS',
   area: 'Bansdroni',                              // shown under the name
   lat: 22.4780, lng: 88.3600,                     // decimal degrees
   cats: ['mechanic', 'structural'],               // filter categories
   primary: 'mechanic',                            // icon + colour on the map badge
   phone: '+91 98300 00046',
-  hours: { o: 9, c: 21 },                         // 24h decimal; 0..24 = open 24 hours
-  off: [0],                                       // closed on Sunday (0=Sun … 6=Sat)
+
+  contact: true,                                  // <-- THIS is what arms CALL
+  src: 'Owner gave permission, visited 2026-09-18',
+  hours: null,                                    // null = hours not confirmed
+
+  off: [0],                                       // closed Sunday (0=Sun … 6=Sat)
   note: 'One sentence. Anything longer gets truncated on purpose.',
   checks: 0,                                      // community confirmations
   verified: '2026-09-18'                          // YYYY-MM-DD
 }
 ```
+
+### The `contact` flag controls the call button
+
+This is the whole mechanism, and it is deliberately explicit rather than inferred:
+
+| `contact` | `phone` | CALL button |
+|---|---|---|
+| `true` | a real number | **enabled**, labelled `CALL NOW` |
+| omitted | a real number | enabled (legacy records fall back to a placeholder-pattern check) |
+| `false`, or a `+91 98300 0…` placeholder | placeholder | **disabled**, greyed out, labelled `NO NUMBER ON FILE` |
+
+The button is **never removed** — only disabled — so the layout never shifts and it stays
+obvious that the number is simply missing rather than that the feature is broken.
+
+To promote a seed record: put in a real consented number, add `contact: true`, and the button
+arms itself. To keep a number on file but stop the app dialling it, set `contact: false`.
+
+### Honest hours
+
+Set `hours: null` for any record whose opening times you have not confirmed. The app then shows
+a **yellow** pin dot and `HOURS NOT CONFIRMED / CALL BEFORE YOU TOW` instead of inventing an
+open/closed state. Never fabricate hours for a real business.
 
 Categories: `air` · `structural` · `control` · `tow` · `parking` · `mechanic`
 
@@ -111,7 +156,7 @@ Optional extras:
 The map is hard-locked to the Greater Kolkata bounding box in `meta.bounds`, so nobody
 can pan off into empty map.
 
-> ### The 257 entries shipped here are SEED DATA
+> ### About the 257 seed records
 >
 > The **geography is real** — every `area` is a genuine Kolkata neighbourhood and its
 > coordinates sit within a few hundred metres of it, which is what makes the map useful to
@@ -121,13 +166,27 @@ can pan off into empty map.
 > dates and the phone numbers. They are not verified businesses, and `+91 98300 0xxxx` is a
 > placeholder sequence, not a real contact.
 >
-> **Because of that, the CALL button is deliberately disabled on every seed record** — dialling
-> a placeholder could reach a stranger who has nothing to do with this map. The detail panel
-> says so on-screen. Put a real number in a record and the button starts working for it.
+> **Because of that, the CALL button is disabled on every seed record** — dialling a
+> placeholder could reach a stranger who has nothing to do with this map. The button stays
+> visible but greyed out, labelled `NO NUMBER ON FILE`, and the detail panel explains why.
+> NAVIGATE still works normally on every record.
 >
 > Publishing a real person's phone number without their consent is a privacy violation. Before
 > sharing this map publicly, walk the list, replace the placeholders with shops that agreed to
 > be listed, and delete the rest.
+
+> ### About the 60 verified listings
+>
+> These are real businesses that publish their numbers specifically so customers can call
+> them. Sources are recorded per record in `src`. Two caveats worth taking seriously:
+>
+> 1. **Directory listings go stale.** Phone numbers change, branches close. The app shows the
+>    capture date (`LISTED ON`) on every verified record so you can judge how much to trust it.
+>    Re-check the list periodically.
+> 2. **Hours are deliberately not shown.** Nobody confirmed them, and inventing an open/closed
+>    state for a real business would be worse than admitting we don't know. Verified listings
+>    get a yellow dot and `CALL AHEAD` instead — which is what you should do anyway before
+>    towing a bike anywhere.
 
 ### Reaching a specific category faster
 
@@ -215,16 +274,21 @@ No build step. Edit a file, refresh the page.
 
 - **Navigation handoff requires the Google Maps app.** Without it, the link opens in
   the browser instead. Everything else works offline.
-- **All 257 records are seed data and CALL is disabled for every one of them.** This is
-  intentional, not a bug. See the warning above for how to turn calling on.
-- **The records have not been field-checked.** Coordinates are correct to the neighbourhood
-  but not to the individual shopfront, because the shopfronts are fictional. Expect to
-  nudge `lat`/`lng` as you replace each record with a real one.
+- **CALL is disabled on all 257 seed records.** Intentional, not a bug. See the `contact`
+  flag section above for how to arm it.
+- **Directory numbers go stale.** The 60 verified listings were captured 2026-09-18 from
+  manufacturer and public dealer directories. Numbers change and branches close — the app
+  shows the capture date on each record, but re-check the list periodically.
+- **Verified listings have no confirmed opening hours**, so they show `CALL AHEAD` rather
+  than a made-up open/closed state.
+- **The 257 seed records have not been field-checked.** Coordinates are correct to the
+  neighbourhood but not to the individual shopfront, because the shopfronts are fictional.
+  Expect to nudge `lat`/`lng` as you replace each one.
 - **`checks` is a static number.** There is no backend, so community confirmations are
   editorial, not live. Wiring that up needs a database or a form service.
 - **Tile zoom stops at 16** (Esri's native limit). Past that the map upscales. This is
   a deliberate trade for a keyless, POI-free basemap — the app hands off to a real
   navigation app for the last few hundred metres anyway.
-- **At city-wide zoom the pins cluster heavily**, because 257 badges cannot fit on a phone
+- **At city-wide zoom the pins cluster heavily**, because 317 badges cannot fit on a phone
   screen without overlapping. That is the clustering doing its job — tap a numbered badge
   to zoom into it.

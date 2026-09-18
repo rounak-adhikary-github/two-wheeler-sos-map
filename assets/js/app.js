@@ -136,9 +136,14 @@
 
   var DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
-  function is24x7(p) { return p.hours.o === 0 && p.hours.c >= 24; }
+  /* Verified listings carry no confirmed opening hours — inventing them for a
+     real business would be worse than admitting we do not know. */
+  function hasHours(p) { return !!(p && p.hours && typeof p.hours.o === 'number'); }
+
+  function is24x7(p) { return hasHours(p) && p.hours.o === 0 && p.hours.c >= 24; }
 
   function isOpenNow(p) {
+    if (!hasHours(p)) return false;
     var now = new Date(), d = now.getDay();
     var h = now.getHours() + now.getMinutes() / 60;
     if (p.off && p.off.indexOf(d) !== -1) return false;
@@ -148,7 +153,14 @@
     return h >= o || h < c; /* overnight shift */
   }
 
+  /* 'open' | 'shut' | 'unknown' — drives the pin dot and the status banner. */
+  function statusKind(p) {
+    if (!hasHours(p)) return 'unknown';
+    return isOpenNow(p) ? 'open' : 'shut';
+  }
+
   function statusText(p) {
+    if (!hasHours(p)) return 'CALL BEFORE YOU TOW';
     if (isOpenNow(p)) return is24x7(p) ? '24 HOURS' : 'CLOSES ' + fmtTime(p.hours.c);
     var now = new Date(), d = now.getDay();
     if (p.off && p.off.indexOf(d) !== -1) return 'CLOSED TODAY · OPENS ' + fmtTime(p.hours.o);
@@ -156,6 +168,7 @@
   }
 
   function hoursText(p) {
+    if (!hasHours(p)) return 'NOT CONFIRMED';
     if (is24x7(p)) return 'OPEN 24 HOURS';
     var t = fmtTime(p.hours.o) + ' – ' + fmtTime(p.hours.c);
     if (p.off && p.off.length) t += ' · SHUT ' + p.off.map(function (d) { return DAYS[d]; }).join(' ');
@@ -176,6 +189,16 @@
     return /^\+91\s*98300\s*0/.test(String(phone));
   }
 
+  /* A record is callable only when it is explicitly flagged as a real listing.
+     The pattern check stays as a backstop so a mis-flagged record can never
+     dial a placeholder. */
+  function hasRealContact(p) {
+    if (!p || !p.phone) return false;
+    if (p.contact === false) return false;
+    if (p.contact === true) return !isPlaceholderPhone(p.phone);
+    return !isPlaceholderPhone(p.phone);
+  }
+
   /* The colour/icon a pin should wear: when a filter is on, matching places
      adopt that filter's colour so the map answers the question directly. */
   function visualCat(p) {
@@ -188,14 +211,23 @@
     return D.places.filter(function (p) { return p.cats.indexOf(state.cat) !== -1; });
   }
 
+  /* Sort priority. Verified listings come first: they are the only records a
+     rider can actually act on, because their number is real. The seed records'
+     open/closed state is generated, so it is a weaker signal than that. */
+  function sortRank(p) {
+    if (hasRealContact(p)) return 0;
+    var k = statusKind(p);
+    return k === 'open' ? 1 : (k === 'unknown' ? 2 : 3);
+  }
+
   function sortedPlaces() {
     var list = visiblePlaces();
     if (state.user) {
       list.sort(function (a, b) { return distTo(a) - distTo(b); });
     } else {
       list.sort(function (a, b) {
-        var oa = isOpenNow(a) ? 0 : 1, ob = isOpenNow(b) ? 0 : 1;
-        if (oa !== ob) return oa - ob;
+        var ra = sortRank(a), rb = sortRank(b);
+        if (ra !== rb) return ra - rb;
         return (b.checks || 0) - (a.checks || 0);
       });
     }
@@ -234,8 +266,9 @@
 
   function pinHtml(p, selected) {
     var c = visualCat(p);
-    var open = isOpenNow(p);
-    return '<div class="pin' + (open ? '' : ' pin--shut') + (selected ? ' pin--sel' : '') + '"' +
+    var k = statusKind(p);
+    var cls = k === 'shut' ? ' pin--shut' : (k === 'unknown' ? ' pin--unk' : '');
+    return '<div class="pin' + cls + (selected ? ' pin--sel' : '') + '"' +
            ' style="--c:' + c.color + ';--ci:' + c.ink + '">' +
            '<span class="pin__ico">' + svg(c.id) + '</span>' +
            '<i class="pin__dot"></i></div>';
@@ -338,7 +371,7 @@
       if (show) {
         if (!map.hasLayer(m)) m.addTo(map);
         var c = visualCat(p);
-        var key = c.id + '|' + (isOpenNow(p) ? 1 : 0) + '|' + (isSel ? 1 : 0);
+        var key = c.id + '|' + statusKind(p) + '|' + (isSel ? 1 : 0);
         if (m._sosKey !== key) {
           m._sosKey = key;
           m.setIcon(L.divIcon({ className: '', html: pinHtml(p, isSel), iconSize: [46, 46], iconAnchor: [23, 23] }));
@@ -439,12 +472,19 @@
 
   function cardHtml(p) {
     var c = visualCat(p);
-    var open = isOpenNow(p);
+    var k = statusKind(p);
     var d = distTo(p);
+    var callable = hasRealContact(p);
     var chips = p.cats.slice(0, 3).map(function (id) {
       var cc = catById(id);
       return '<span class="chip" style="--c:' + cc.color + ';--ci:' + cc.ink + '">' + esc(cc.tile) + '</span>';
     }).join('');
+
+    var statusChip = k === 'open'
+      ? '<span class="chip chip--open">OPEN</span>'
+      : (k === 'shut'
+        ? '<span class="chip chip--shut">SHUT</span>'
+        : '<span class="chip chip--unk">CALL AHEAD</span>');
 
     return '<button type="button" class="card' + (state.sel === p.id ? ' is-sel' : '') + '"' +
       ' data-id="' + p.id + '" style="--c:' + c.color + ';--ci:' + c.ink + '">' +
@@ -452,17 +492,20 @@
       '<span>' +
         '<span class="card__name">' + esc(p.name) + '</span>' +
         '<span class="card__meta">' +
-          '<span class="chip ' + (open ? 'chip--open' : 'chip--shut') + '">' + (open ? 'OPEN' : 'SHUT') + '</span>' +
+          statusChip +
           (d !== null ? '<span class="card__dist">' + fmtDist(d) + '</span><span class="card__sep">·</span>' : '') +
           '<span>' + esc(p.area) + '</span>' +
+          (callable ? '<span class="card__tel" title="Phone number on file">' + svg('phone') + '</span>' : '') +
         '</span>' +
-        '<span class="card__meta" style="margin-top:6px">' + chips + '</span>' +
+        '<span class="card__meta" style="margin-top:6px">' + chips +
+          (p.brand ? '<span class="chip chip--brand">' + esc(p.brand) + '</span>' : '') +
+        '</span>' +
       '</span></button>';
   }
 
   function renderList(resetPage) {
     var list = sortedPlaces();
-    var sortNote = state.user ? 'NEAREST FIRST' : 'OPEN FIRST';
+    var sortNote = state.user ? 'NEAREST FIRST' : 'CALLABLE FIRST';
     if (resetPage) listShown = LIST_PAGE;
 
     if (!list.length) {
@@ -496,9 +539,9 @@
   /* ---------------------------------------------------------------- DETAIL */
   function renderDetail(p) {
     var c = visualCat(p);
-    var open = isOpenNow(p);
+    var k = statusKind(p);
     var d = distTo(p);
-    var demo = isPlaceholderPhone(p.phone);
+    var callable = hasRealContact(p);
 
     var chips = p.cats.map(function (id) {
       var cc = catById(id);
@@ -506,6 +549,26 @@
     }).join('');
     if (p.air) chips += '<span class="chip" style="--c:var(--hi-vis);--ci:#111">AIR ' + esc(p.air) + '</span>';
     if (p.pickup) chips += '<span class="chip" style="--c:var(--alert);--ci:#fff">PICKUP AVAILABLE</span>';
+    if (p.brand) chips += '<span class="chip chip--brand">' + esc(p.brand) + '</span>';
+
+    var statusHtml = k === 'open'
+      ? '<div class="status"><span class="status__dot"></span><span>OPEN NOW</span>' +
+        '<span class="status__sub">' + esc(statusText(p)) + '</span></div>'
+      : (k === 'shut'
+        ? '<div class="status is-shut"><span class="status__dot"></span><span>CLOSED NOW</span>' +
+          '<span class="status__sub">' + esc(statusText(p)) + '</span></div>'
+        : '<div class="status is-unk"><span class="status__dot"></span><span>HOURS NOT CONFIRMED</span>' +
+          '<span class="status__sub">' + esc(statusText(p)) + '</span></div>');
+
+    /* Verified listings get a provenance line. Seed records get a warning that
+       explains why their call button is dead. */
+    var banner = callable
+      ? '<div class="srcstrip"><b>LISTED NUMBER</b>' + esc(p.src || 'Publicly listed') +
+        ' · captured ' + esc(shortDate(p.verified)) + '. Ring ahead before you tow.</div>'
+      : '<div class="warnstrip"><b>SEED RECORD — NO REAL NUMBER</b>' +
+        'This is a placeholder entry, so <b>CALL IS DISABLED</b> for it — dialling would reach a ' +
+        'stranger. Replace it in <code>assets/js/data.js</code> with a real, consented listing ' +
+        'and the call button activates.</div>';
 
     viewDetail.innerHTML =
       '<button type="button" class="btn btn--ghost btn--sm" id="btn-back">' +
@@ -514,25 +577,18 @@
       '<h2 class="detail__name">' + esc(p.name) + '</h2>' +
       '<p class="detail__where">' + esc(p.area) + ' · KOLKATA · ' + esc(p.id.toUpperCase()) + '</p>' +
 
-      (demo
-        ? '<div class="warnstrip"><b>SEED RECORD — NOT A REAL SHOP</b>' +
-          'The name, hours and phone number here are placeholders. Calling is disabled so nobody ' +
-          'reaches a stranger by accident. Replace this record in <code>assets/js/data.js</code>.</div>'
-        : '') +
-
-      '<div class="status' + (open ? '' : ' is-shut') + '">' +
-        '<span class="status__dot"></span>' +
-        '<span>' + (open ? 'OPEN NOW' : 'CLOSED NOW') + '</span>' +
-        '<span class="status__sub">' + esc(statusText(p)) + '</span>' +
-      '</div>' +
+      banner +
+      statusHtml +
 
       '<div class="grid2">' +
         '<div class="stat"><div class="stat__k">DISTANCE</div><div class="stat__v">' +
           (d === null ? '—' : fmtDist(d).replace(' ', '<small> ').replace(/$/, '</small>')) + '</div></div>' +
-        '<div class="stat"><div class="stat__k">RIDER CHECKS</div><div class="stat__v">' + (p.checks || 0) + '</div></div>' +
+        '<div class="stat"><div class="stat__k">PHONE</div><div class="stat__v" style="font-size:15px;line-height:1.3">' +
+          (callable ? esc(p.phone) : '<span style="color:var(--ink-dim)">NONE ON FILE</span>') + '</div></div>' +
         '<div class="stat"><div class="stat__k">HOURS</div><div class="stat__v" style="font-size:16px;line-height:1.25">' +
           esc(hoursText(p)) + '</div></div>' +
-        '<div class="stat"><div class="stat__k">LAST VERIFIED</div><div class="stat__v">' + esc(shortDate(p.verified)) + '</div></div>' +
+        '<div class="stat"><div class="stat__k">' + (callable ? 'LISTED ON' : 'LAST VERIFIED') + '</div>' +
+          '<div class="stat__v">' + esc(shortDate(p.verified)) + '</div></div>' +
       '</div>' +
 
       '<div class="chips">' + chips + '</div>' +
@@ -543,6 +599,18 @@
 
     $('btn-back').addEventListener('click', deselect);
     $('btn-copy').addEventListener('click', function () { copyText(p.lat + ',' + p.lng, 'COORDINATES COPIED'); });
+  }
+
+  /* The call button is enabled only for records with a real number. Everything
+     else keeps the button visible but inert, so the layout never shifts and it
+     is obvious the number is simply missing. */
+  function syncCallButton(p) {
+    var btn = $('btn-call');
+    var ok = hasRealContact(p);
+    btn.disabled = !ok;
+    btn.setAttribute('aria-disabled', ok ? 'false' : 'true');
+    btn.classList.toggle('is-off', !ok);
+    btn.querySelector('.btn__txt').textContent = ok ? 'CALL NOW' : 'NO NUMBER ON FILE';
   }
 
   function select(id) {
@@ -559,6 +627,7 @@
 
     sheetTitle.textContent = p.name;
     dock.hidden = false;
+    syncCallButton(p);
     document.documentElement.style.setProperty('--dock-h', dock.offsetHeight + 'px');
 
     layoutPins();
@@ -584,8 +653,9 @@
   /* ------------------------------------------------------------- READOUT */
   function updateReadout() {
     var list = visiblePlaces();
-    var open = list.filter(isOpenNow).length;
-    readoutRight.textContent = open + ' OPEN · ' + list.length + ' TOTAL';
+    var open = list.filter(function (p) { return statusKind(p) === 'open'; }).length;
+    var callable = list.filter(hasRealContact).length;
+    readoutRight.textContent = open + ' OPEN · ' + callable + ' CALLABLE · ' + list.length + ' TOTAL';
 
     if (!state.user) {
       readoutLeft.textContent = 'TAP ◎ TO FIND YOUR POSITION';
@@ -825,9 +895,9 @@
   $('btn-call').addEventListener('click', function () {
     var p = currentPlace();
     if (!p) return;
-    if (isPlaceholderPhone(p.phone)) {
-      /* Refuse rather than dial — see isPlaceholderPhone(). */
-      showToast('SEED RECORD — NO REAL NUMBER TO DIAL');
+    if (!hasRealContact(p)) {
+      /* Backstop — the button is disabled, but never dial a placeholder. */
+      showToast('NO NUMBER ON FILE FOR THIS RECORD');
       return;
     }
     showToast('DIALING ' + p.phone);
@@ -870,6 +940,26 @@
     { n: '101', t: 'FIRE BRIGADE', s: 'West Bengal fire and rescue', cls: 'dial--fire' }
   ];
 
+  /* Manufacturer helplines. A stranded rider with a specific brand can often
+     get recovery arranged through these faster than through a local garage. */
+  var HELPLINES = [
+    { n: '1800 266 0018', t: 'HERO MOTOCORP', s: 'Customer care and assistance' },
+    { n: '1800 103 3434', t: 'HONDA 2WHEELERS', s: 'Customer care' },
+    { n: '1800 425 2077', t: 'TVS MOTOR', s: 'Customer care' },
+    { n: '1800 233 2453', t: 'BAJAJ AUTO', s: 'Customer care' },
+    { n: '1800 2100 007', t: 'ROYAL ENFIELD', s: '24x7 roadside assistance' }
+  ];
+
+  function renderHelplines() {
+    $('helpline-list').innerHTML = HELPLINES.map(function (e) {
+      return '<button type="button" class="dial dial--mfr" data-tel="' + e.n + '">' +
+        '<span class="dial__n" style="font-size:19px;min-width:132px">' + e.n + '</span>' +
+        '<span class="dial__t">' + esc(e.t) + '<small>' + esc(e.s) + '</small></span>' +
+        '<span class="btn__ico" style="margin-left:auto;width:26px;height:26px">' + svg('phone') + '</span>' +
+        '</button>';
+    }).join('');
+  }
+
   function renderEmergency() {
     $('emergency-list').innerHTML = EMERGENCY.map(function (e) {
       return '<button type="button" class="dial ' + e.cls + '" data-tel="' + e.n + '">' +
@@ -896,6 +986,11 @@
     var t = state.user ? state.user.lat.toFixed(6) + ',' + state.user.lng.toFixed(6) : '';
     if (!t) { showToast('NO POSITION YET — TAP ◎ FIRST'); return; }
     copyText(t, 'COORDINATES COPIED');
+  });
+
+  $('helpline-list').addEventListener('click', function (e) {
+    var b = e.target.closest('.dial');
+    if (b) window.location.href = 'tel:' + b.getAttribute('data-tel');
   });
 
   $('btn-sos').addEventListener('click', function () { modal.hidden = false; });
@@ -939,9 +1034,11 @@
   $('btn-zout').addEventListener('click', function () { map.zoomOut(); });
   $('btn-locate').addEventListener('click', locate);
 
-  $('stamp').innerHTML = D.places.length + ' SEED RECORDS ACROSS ' +
+  var callable = D.places.filter(hasRealContact).length;
+  $('stamp').innerHTML = D.places.length + ' PLACES ACROSS ' +
     new Set(D.places.map(function (p) { return p.area; })).size + ' KOLKATA LOCALITIES · ' +
-    'LIST UPDATED <b>' + esc(D.meta.updated) + '</b> · MAP LOCKED TO GREATER KOLKATA.';
+    '<b>' + callable + ' WITH A REAL NUMBER</b> · ' + (D.places.length - callable) +
+    ' SEED RECORDS · LIST UPDATED <b>' + esc(D.meta.updated) + '</b>.';
 
   window.addEventListener('resize', function () {
     layout();
@@ -968,6 +1065,7 @@
     paintStaticIcons();
     initTheme();
     renderEmergency();
+    renderHelplines();
     renderRail();
     buildMarkers();
     layoutPins();

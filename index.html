@@ -108,6 +108,11 @@
     <p class="kicker">DIAL DIRECTLY</p>
     <div class="stack" id="emergency-list"></div>
 
+    <p class="kicker">MANUFACTURER HELPLINES</p>
+    <div class="stack" id="helpline-list"></div>
+    <p class="hint">If your bike is under warranty or you have roadside assistance cover, the
+      manufacturer can often arrange recovery faster than a local garage.</p>
+
     <p class="kicker">SHARE YOUR POSITION</p>
     <button type="button" class="btn btn--ghost" id="btn-share-sms">
       <span class="btn__ico" data-ico="share"></span><span class="btn__txt">SEND MY PIN BY SMS</span>
@@ -127,14 +132,21 @@
 
     <p class="kicker">ABOUT THE DATA — READ THIS</p>
     <p class="hint" id="about-data">
-      This build ships with <b>seed data</b>. The neighbourhood names and coordinates are real
-      Kolkata geography, but the <b>business names, opening hours, verification dates and phone
-      numbers are synthetic placeholders</b> — they are not verified shops, and the numbers are
-      not real contacts. That is why <b>CALL is disabled</b> on every record: dialling a
-      placeholder could reach a stranger.
+      This map mixes <b>two kinds of record</b>, and the app tells you which is which.
       <br><br>
-      To go live, open <code>assets/js/data.js</code>, replace each record with a real shop that
-      has agreed to be listed, then delete the rest. A real number makes the call button work.
+      <b>VERIFIED LISTINGS</b> — authorised Hero, Honda, TVS, Bajaj and Royal Enfield service
+      centres. These carry a real, publicly published phone number, so the <b>CALL button is
+      live</b> and the detail panel shows where the listing came from. Their opening hours are
+      <b>not</b> confirmed, so the map shows a yellow dot and <b>CALL AHEAD</b> rather than
+      guessing. Ring before you tow.
+      <br><br>
+      <b>SEED RECORDS</b> — the rest of the map. The neighbourhood and coordinates are real
+      Kolkata geography, but the business names, hours and phone numbers are synthetic
+      placeholders. <b>CALL is disabled</b> on these, because dialling a placeholder could
+      reach a stranger.
+      <br><br>
+      To promote a seed record, open <code>assets/js/data.js</code>, put in a real consented
+      number and set <code>contact: true</code>. The call button activates on its own.
     </p>
     <p class="hint" id="stamp"></p>
   </div>
