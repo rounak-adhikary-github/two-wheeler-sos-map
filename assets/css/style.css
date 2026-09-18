@@ -658,7 +658,7 @@ body { -webkit-user-select: none; user-select: none; }
   margin-bottom: 3px;
 }
 
-/* Shown on any record whose phone number is still a seed placeholder. */
+/* Shown on any record that has no published phone number on file. */
 .warnstrip {
   border: var(--bw) solid var(--edge);
   border-radius: 10px;

@@ -189,10 +189,10 @@
     return d.getDate() + ' ' + ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][d.getMonth()];
   }
 
-  /* The seed dataset ships synthetic phone numbers. Dialling one could reach a
-     real stranger who has nothing to do with this map, so a call to a
-     placeholder number is refused rather than placed. Replace the number in
-     data.js with a real, consented one and the button starts working. */
+  /* Safety net. Every live record is a real business with a published number,
+     but if a placeholder-style number is ever added to data.js it must never be
+     dialled — a fake number can still reach a real stranger. So a call to one is
+     refused rather than placed, whatever the `contact` flag says. */
   function isPlaceholderPhone(phone) {
     return /^\+91\s*98300\s*0/.test(String(phone));
   }

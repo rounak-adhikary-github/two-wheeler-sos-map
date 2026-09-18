@@ -15,14 +15,17 @@ coordinates to the native Google Maps app in one tap. Hosted free on GitHub Page
   - All are authorised service centres sourced 2026-09-18 from manufacturer ASC
     directories, public authorised-dealer directories, Royal Enfield's own dealer locator,
     and the towing operators' own sites. Each record stores `src`.
-- **`assets/js/seed-records.js` holds the 257 archived placeholder records.** It is NOT
-  referenced by `index.html` — preserved on disk so nothing was deleted, zero download cost.
-  Do not add it back to index.html.
+- **No placeholder or sample data anywhere in the project.** The 257 archived seed records
+  were deleted on the user's instruction. They remain recoverable from git commit
+  `518df80` via `git show 518df80:assets/js/seed-records.js` — but do not restore them
+  without being asked.
 - **`hours: null` on every record.** These directories do not publish opening times, so the
   app shows a yellow dot and `CALL AHEAD` rather than inventing a state. Never fabricate hours
   for a real business.
 - **Pin dot semantics:** yellow = hours unknown but callable; red = no number on file.
 - **`contact: true` is the only thing that arms CALL.** Never set it on an unverified number.
+  `isPlaceholderPhone()` stays as a backstop so a placeholder-style number can never dial,
+  whatever the flag says.
 - **Known gap: no puncture shops, tyre dealers or air points.** Numbers for those could not be
   verified, so the app hides the empty category filters rather than inventing listings.
 

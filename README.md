@@ -27,7 +27,8 @@ handlebar mount. Every design decision follows from that.
 ## Coverage
 
 **125 real listings. No fabricated records.** Every entry is a genuine business with a real
-street address and a phone number printed exactly as its source published it.
+street address and a phone number printed exactly as its source published it. There is no
+placeholder or sample data anywhere in the project.
 
 | Brand | Listings |
 |---|---|
@@ -225,7 +226,6 @@ index.html                  markup and structure
 assets/css/style.css        the entire design system, commented by section
 assets/js/data.js           <-- all content lives here
 assets/js/app.js            map, filters, clustering, geolocation, navigation handoff
-assets/js/seed-records.js   ARCHIVED placeholder records — NOT loaded, kept for reference
 assets/img/icon.svg         app / home-screen icon
 vendor/leaflet/             Leaflet 1.9.4, vendored so the app works offline
 sw.js                       offline cache (app shell, tiles, fonts)
@@ -234,10 +234,6 @@ manifest.webmanifest        installable "add to home screen" metadata
 ```
 
 No build step. Edit a file, refresh the page.
-
-`seed-records.js` holds the 257 synthetic placeholder records from the earlier draft. It is
-**not referenced by `index.html`**, so it costs nothing to download — it is just kept on disk
-so that work is not lost. Delete it if you do not want it.
 
 ---
 
