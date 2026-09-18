@@ -1,0 +1,991 @@
+/* ==========================================================================
+   TWO-WHEELER SOS MAP — KOLKATA
+   Static, dependency-light, works offline once loaded, hosts free on GitHub
+   Pages. All content comes from assets/js/data.js — this file is logic only.
+   ========================================================================== */
+(function () {
+  'use strict';
+
+  var D = window.SOS_DATA;
+  if (!D) { console.error('SOS: data.js failed to load'); return; }
+
+  /* ------------------------------------------------------------------ ICONS */
+  /* Inline SVG everywhere — no icon font, no sprite, no 404s offline. */
+  var ICONS = {
+    all: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2.2"/><rect x="13" y="3" width="8" height="8" rx="2.2"/><rect x="3" y="13" width="8" height="8" rx="2.2"/><rect x="13" y="13" width="8" height="8" rx="2.2"/></svg>',
+    air: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.4" cy="12" r="7"/><circle cx="10.4" cy="12" r="2.6"/><path d="M17.4 12H22"/><path d="M10.4 5V2.2"/></svg>',
+    structural: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3.2h13"/><path d="M7.6 3.2v8.4a4.4 4.4 0 0 0 8.8 0V3.2"/><path d="M12 16v4.8"/><path d="M8.3 20.8h7.4"/></svg>',
+    control: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.4 5.6h8"/><circle cx="12.4" cy="5.6" r="2.2"/><path d="M12.4 7.8v3.6a6.6 6.6 0 0 0 6.6 6.6h2.6"/><path d="M18.6 2.7 21.5 5.6l-2.9 2.9"/></svg>',
+    tow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2.4 16.4V8.4H10v8"/><path d="M10 12h4.2l3.4 4.4"/><path d="M2.4 16.4h2.1"/><circle cx="7.1" cy="17.5" r="2.3"/><circle cx="16.5" cy="17.5" r="2.3"/><path d="M11.4 17.5h2.8"/><path d="M20.5 17.5h1.1"/><path d="M5 8.4V5.9h4.6"/></svg>',
+    parking: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4.5"/><path d="M9.4 17.2V6.8h3.3a3.1 3.1 0 0 1 0 6.2H9.4"/></svg>',
+    mechanic: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.6 19.1 13.5 10c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6.1 6 9.1 1.7 4.8C.5 7.2 1 10.2 3 12.2c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.2-2.2c.4-.5.4-1.1 0-1.5z"/></svg>',
+
+    navigate: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.1 3.1 21.6l8.9-4.3 8.9 4.3z"/></svg>',
+    phone: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.7 10.9a15.1 15.1 0 0 0 6.4 6.4l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.58 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.4 11.4 0 0 0 .58 3.6 1 1 0 0 1-.25 1z"/></svg>',
+    plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M12 5.2v13.6M5.2 12h13.6"/></svg>',
+    minus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M5.2 12h13.6"/></svg>',
+    target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="7.8"/><circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/><path d="M12 1.6v3.2M12 19.2v3.2M1.6 12h3.2M19.2 12h3.2"/></svg>',
+    moon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.6 15.4A8.9 8.9 0 0 1 8.6 3.4a8.9 8.9 0 1 0 12 12z"/></svg>',
+    sun: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="4.6"/><path d="M12 1.7v3M12 19.3v3M1.7 12h3M19.3 12h3M4.7 4.7l2.1 2.1M17.2 17.2l2.1 2.1M19.3 4.7l-2.1 2.1M6.8 17.2l-2.1 2.1" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg>',
+    warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"><path d="M12 2.7 1.7 21h20.6z"/><path d="M12 9.2v4.9" stroke-width="2.6" stroke-linecap="round"/><circle cx="12" cy="17.4" r="1.35" fill="currentColor" stroke="none"/></svg>',
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5.4 5.4 18.6 18.6M18.6 5.4 5.4 18.6"/></svg>',
+    chevup: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15.2 12 8.2l7 7"/></svg>',
+    chevdown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8.8 12 15.8l7-7"/></svg>',
+    share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.6v12.4"/><path d="M7.6 6.9 12 2.5l4.4 4.4"/><path d="M4.6 12.4v7.6a1.4 1.4 0 0 0 1.4 1.4h12a1.4 1.4 0 0 0 1.4-1.4v-7.6"/></svg>',
+    copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"><rect x="8.4" y="8.4" width="12" height="12" rx="2.4"/><path d="M15.6 8.4V5.6a2.4 2.4 0 0 0-2.4-2.4H5.6A2.4 2.4 0 0 0 3.2 5.6v7.6a2.4 2.4 0 0 0 2.4 2.4h2.8"/></svg>',
+    back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4.5 7.5 12l7.5 7.5"/></svg>'
+  };
+
+  function svg(name) { return ICONS[name] || ''; }
+  function icoEl(name) { return '<span class="ico">' + svg(name) + '</span>'; }
+
+  /* ------------------------------------------------------------------------
+     The map is intentionally stripped of every non-essential POI. Only the
+     road network, water and land are drawn — no restaurants, no retail, no
+     parks. A stranded rider sees streets, not advertising.
+
+     The default provider is Esri's Gray Canvas basemap: it needs no API key,
+     no signup and no billing account, and its labels live in a *separate*
+     reference layer that we simply never request. That gives us a genuinely
+     POI-free basemap for free.
+
+     To swap providers, add a block below and point ACTIVE_PROVIDER at it.
+     Any keyed provider (MapTiler, Mapbox, Google) needs its own key, its own
+     billing account and its own terms review before you publish a public URL.
+     ---------------------------------------------------------------------- */
+  var PROVIDERS = {
+    esri: {
+      day:   'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+      night: 'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+      maxNativeZoom: 16,
+      /* Leaflet resolves {s} unconditionally, so this must stay non-empty even
+         though the Esri URL template has no subdomain placeholder. */
+      subdomains: 'abc',
+      attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors, and the GIS user community'
+    }
+
+    /* Example of a keyed alternative — uncomment, add your key, read the terms:
+    , maptiler: {
+      day:   'https://api.maptiler.com/maps/dataviz-light/256/{z}/{x}/{y}.png?key=YOUR_KEY_HERE',
+      night: 'https://api.maptiler.com/maps/dataviz-dark/256/{z}/{x}/{y}.png?key=YOUR_KEY_HERE',
+      maxNativeZoom: 20,
+      attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; OpenStreetMap contributors'
+    }
+    */
+  };
+  var ACTIVE_PROVIDER = 'esri';
+
+  /* ------------------------------------------------------------------ STATE */
+  var state = {
+    cat: 'all',
+    sel: null,
+    user: null,
+    snap: 'peek',
+    theme: 'day'
+  };
+
+  var snaps = { peek: 0, half: 0, full: 0 };
+
+  /* ------------------------------------------------------------------- DOM */
+  var $ = function (id) { return document.getElementById(id); };
+  var hud = $('hud'), rail = $('rail'), sheet = $('sheet'), sheetHead = $('sheet-head'),
+      sheetScroll = $('sheet-scroll'), sheetTitle = $('sheet-title'), dock = $('dock'),
+      viewList = $('view-list'), viewDetail = $('view-detail'),
+      readoutLeft = $('readout-left'), readoutRight = $('readout-right'),
+      modal = $('modal'), toast = $('toast'), side = $('side');
+
+  /* ---------------------------------------------------------------- HELPERS */
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function catById(id) {
+    for (var i = 0; i < D.categories.length; i++) if (D.categories[i].id === id) return D.categories[i];
+    return D.categories[D.categories.length - 1];
+  }
+
+  function haversine(aLat, aLng, bLat, bLng) {
+    var R = 6371, toRad = Math.PI / 180;
+    var dLat = (bLat - aLat) * toRad, dLng = (bLng - aLng) * toRad;
+    var s = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(aLat * toRad) * Math.cos(bLat * toRad) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
+  }
+
+  function distTo(p) {
+    if (!state.user) return null;
+    return haversine(state.user.lat, state.user.lng, p.lat, p.lng);
+  }
+
+  function fmtDist(km) {
+    if (km === null || km === undefined) return '—';
+    if (km < 1) return Math.round(km * 1000 / 10) * 10 + ' M';
+    if (km < 10) return km.toFixed(1) + ' KM';
+    return Math.round(km) + ' KM';
+  }
+
+  function fmtTime(h) {
+    if (h >= 24 || h <= 0) return 'MIDNIGHT';
+    var hh = Math.floor(h), mm = Math.round((h - hh) * 60);
+    var ap = hh >= 12 ? 'PM' : 'AM';
+    var h12 = hh % 12; if (h12 === 0) h12 = 12;
+    return h12 + (mm ? ':' + (mm < 10 ? '0' + mm : mm) : '') + ' ' + ap;
+  }
+
+  var DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+  function is24x7(p) { return p.hours.o === 0 && p.hours.c >= 24; }
+
+  function isOpenNow(p) {
+    var now = new Date(), d = now.getDay();
+    var h = now.getHours() + now.getMinutes() / 60;
+    if (p.off && p.off.indexOf(d) !== -1) return false;
+    if (is24x7(p)) return true;
+    var o = p.hours.o, c = p.hours.c;
+    if (c > o) return h >= o && h < c;
+    return h >= o || h < c; /* overnight shift */
+  }
+
+  function statusText(p) {
+    if (isOpenNow(p)) return is24x7(p) ? '24 HOURS' : 'CLOSES ' + fmtTime(p.hours.c);
+    var now = new Date(), d = now.getDay();
+    if (p.off && p.off.indexOf(d) !== -1) return 'CLOSED TODAY · OPENS ' + fmtTime(p.hours.o);
+    return 'OPENS ' + fmtTime(p.hours.o);
+  }
+
+  function hoursText(p) {
+    if (is24x7(p)) return 'OPEN 24 HOURS';
+    var t = fmtTime(p.hours.o) + ' – ' + fmtTime(p.hours.c);
+    if (p.off && p.off.length) t += ' · SHUT ' + p.off.map(function (d) { return DAYS[d]; }).join(' ');
+    return t;
+  }
+
+  function shortDate(iso) {
+    var d = new Date(iso + 'T00:00:00');
+    if (isNaN(d)) return iso;
+    return d.getDate() + ' ' + ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][d.getMonth()];
+  }
+
+  /* The seed dataset ships synthetic phone numbers. Dialling one could reach a
+     real stranger who has nothing to do with this map, so a call to a
+     placeholder number is refused rather than placed. Replace the number in
+     data.js with a real, consented one and the button starts working. */
+  function isPlaceholderPhone(phone) {
+    return /^\+91\s*98300\s*0/.test(String(phone));
+  }
+
+  /* The colour/icon a pin should wear: when a filter is on, matching places
+     adopt that filter's colour so the map answers the question directly. */
+  function visualCat(p) {
+    if (state.cat !== 'all' && p.cats.indexOf(state.cat) !== -1) return catById(state.cat);
+    return catById(p.primary);
+  }
+
+  function visiblePlaces() {
+    if (state.cat === 'all') return D.places.slice();
+    return D.places.filter(function (p) { return p.cats.indexOf(state.cat) !== -1; });
+  }
+
+  function sortedPlaces() {
+    var list = visiblePlaces();
+    if (state.user) {
+      list.sort(function (a, b) { return distTo(a) - distTo(b); });
+    } else {
+      list.sort(function (a, b) {
+        var oa = isOpenNow(a) ? 0 : 1, ob = isOpenNow(b) ? 0 : 1;
+        if (oa !== ob) return oa - ob;
+        return (b.checks || 0) - (a.checks || 0);
+      });
+    }
+    return list;
+  }
+
+  /* ------------------------------------------------------------------- MAP */
+  var map = L.map('map', {
+    zoomControl: false,
+    attributionControl: true,
+    minZoom: D.meta.minZoom,
+    maxZoom: D.meta.maxZoom,
+    maxBounds: L.latLngBounds(D.meta.bounds),
+    maxBoundsViscosity: 1.0,      /* hard lock — you cannot pan off into nowhere */
+    worldCopyJump: false,
+    preferCanvas: false
+  }).setView(D.meta.center, D.meta.startZoom);
+
+  map.attributionControl.setPrefix('');
+
+  var tileLayer = null;
+  function applyTiles() {
+    var prov = PROVIDERS[ACTIVE_PROVIDER];
+    if (tileLayer) map.removeLayer(tileLayer);
+    tileLayer = L.tileLayer(prov[state.theme], {
+      subdomains: prov.subdomains,
+      maxZoom: prov.maxZoom,
+      detectRetina: true,
+      attribution: prov.attribution,
+      crossOrigin: true
+    }).addTo(map);
+  }
+
+  var markers = {};   /* id -> L.Marker */
+  var meMarker = null, meCircle = null;
+
+  function pinHtml(p, selected) {
+    var c = visualCat(p);
+    var open = isOpenNow(p);
+    return '<div class="pin' + (open ? '' : ' pin--shut') + (selected ? ' pin--sel' : '') + '"' +
+           ' style="--c:' + c.color + ';--ci:' + c.ink + '">' +
+           '<span class="pin__ico">' + svg(c.id) + '</span>' +
+           '<i class="pin__dot"></i></div>';
+  }
+
+  function makeMarker(p) {
+    var m = L.marker([p.lat, p.lng], {
+      icon: L.divIcon({ className: '', html: pinHtml(p, false), iconSize: [46, 46], iconAnchor: [23, 23] }),
+      riseOnHover: true,
+      keyboard: false
+    });
+    m.bindTooltip(
+      '<span>' + esc(p.name) + '</span>',
+      { permanent: true, direction: 'top', offset: [0, -24], className: 'pin-lbl', opacity: 1 }
+    );
+    m.on('click', function () { select(p.id); });
+    return m;
+  }
+
+  function buildMarkers() {
+    Object.keys(markers).forEach(function (id) { map.removeLayer(markers[id]); });
+    markers = {};
+    D.places.forEach(function (p) {
+      var m = makeMarker(p);
+      markers[p.id] = m;
+    });
+  }
+
+  var clusterLayer = L.layerGroup().addTo(map);
+
+  /* ------------------------------------------------------------------------
+     PIN LAYOUT
+     Forty-five oversized badges will always overlap in a dense city. Overlap
+     means misclicks, which is the one thing this UI cannot afford. So pins
+     that would collide collapse into a numbered cluster badge; tapping it
+     zooms in until they separate. The selected pin is never swallowed.
+     ---------------------------------------------------------------------- */
+  function layoutPins() {
+    var z = map.getZoom();
+    /* Only merge pins that would physically overlap. Anything further apart
+       than one pin diameter stays its own tappable badge. */
+    var R = 46;
+    var shown = visiblePlaces();
+    var visibleIds = {};
+    var clusters = [];
+
+    var items = shown.map(function (p) {
+      var pt = map.project([p.lat, p.lng], z);
+      return { p: p, x: pt.x, y: pt.y };
+    });
+    /* Selected first, so it always seeds its own group and stays tappable. */
+    items.sort(function (a, b) {
+      return (a.p.id === state.sel ? 0 : 1) - (b.p.id === state.sel ? 0 : 1);
+    });
+
+    var groups = [];
+    items.forEach(function (it) {
+      for (var i = 0; i < groups.length; i++) {
+        var g = groups[i];
+        var dx = g.x - it.x, dy = g.y - it.y;
+        if (dx * dx + dy * dy < R * R) {
+          g.x = (g.x * g.n + it.x) / (g.n + 1);
+          g.y = (g.y * g.n + it.y) / (g.n + 1);
+          g.n++;
+          g.items.push(it);
+          return;
+        }
+      }
+      groups.push({ x: it.x, y: it.y, n: 1, items: [it] });
+    });
+
+    groups.forEach(function (g) {
+      var kept = [];
+      g.items.forEach(function (it) {
+        if (it.p.id === state.sel) visibleIds[it.p.id] = true; else kept.push(it);
+      });
+      if (kept.length === 1) { visibleIds[kept[0].p.id] = true; return; }
+      if (!kept.length) return;
+
+      var lat = 0, lng = 0, kinds = {};
+      kept.forEach(function (it) {
+        lat += it.p.lat; lng += it.p.lng;
+        kinds[it.p.primary] = 1;
+      });
+      var only = Object.keys(kinds);
+      clusters.push({
+        lat: lat / kept.length,
+        lng: lng / kept.length,
+        n: kept.length,
+        cat: only.length === 1 ? only[0] : null
+      });
+    });
+
+    /* Apply to the persistent markers. */
+    D.places.forEach(function (p) {
+      var m = markers[p.id];
+      if (!m) return;
+      var isSel = state.sel === p.id;
+      var show = !!visibleIds[p.id];
+      if (show) {
+        if (!map.hasLayer(m)) m.addTo(map);
+        var c = visualCat(p);
+        var key = c.id + '|' + (isOpenNow(p) ? 1 : 0) + '|' + (isSel ? 1 : 0);
+        if (m._sosKey !== key) {
+          m._sosKey = key;
+          m.setIcon(L.divIcon({ className: '', html: pinHtml(p, isSel), iconSize: [46, 46], iconAnchor: [23, 23] }));
+        }
+        m.setZIndexOffset(isSel ? 1000 : 0);
+        /* Name plates appear once the streets are readable, and always for
+           the pin the rider has actually chosen. */
+        if (isSel || z >= 16) m.openTooltip(); else m.closeTooltip();
+      } else if (map.hasLayer(m)) {
+        m.closeTooltip();
+        map.removeLayer(m);
+      }
+    });
+
+    /* Rebuild cluster badges. If every place inside shares a category, the
+       badge wears that colour so the map still answers the filter question. */
+    clusterLayer.clearLayers();
+    clusters.forEach(function (c) {
+      var c2 = c.cat ? catById(c.cat) : null;
+      L.marker([c.lat, c.lng], {
+        icon: L.divIcon({
+          className: '',
+          html: '<div class="pin pin--cluster"' + (c2 ? ' style="--c:' + c2.color + '"' : '') + '>' +
+                '<span class="pin__n">' + c.n + '</span></div>',
+          iconSize: [54, 54],
+          iconAnchor: [27, 27]
+        }),
+        keyboard: false
+      }).on('click', function () {
+        map.flyTo([c.lat, c.lng], Math.min(D.meta.maxZoom, z + 2), { duration: .5 });
+      }).addTo(clusterLayer);
+    });
+  }
+
+  /* Re-cluster on zoom only. Re-clustering mid-pan would make pins jump
+     under the rider's thumb, which is worse than a little overlap. */
+  map.on('zoomend', layoutPins);
+
+  function fitToPlaces(list, animate) {
+    var pts = list.slice(0, 12).map(function (p) { return [p.lat, p.lng]; });
+    if (state.user) pts.push([state.user.lat, state.user.lng]);
+    if (!pts.length) return;
+    var peek = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--peek-h')) || 150;
+    var opts = {
+      paddingTopLeft: [24, hud.offsetHeight + 24],
+      paddingBottomRight: [24, peek + 24],
+      maxZoom: 15,
+      animate: animate !== false
+    };
+    map.fitBounds(L.latLngBounds(pts).pad(0.06), opts);
+  }
+
+  function flyToPlace(p) {
+    var peek = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--peek-h')) || 150;
+    var targetZ = Math.max(map.getZoom(), 15);
+    var pt = map.project([p.lat, p.lng], targetZ);
+    var offset = (hud.offsetHeight - peek) / 2; /* keep the pin in the visible band */
+    var center = map.unproject(pt.add([0, offset]), targetZ);
+    map.flyTo(center, targetZ, { duration: 0.6 });
+  }
+
+  /* ---------------------------------------------------------------- FILTER */
+  function renderRail() {
+    var html = '<button type="button" class="tile tile--all' + (state.cat === 'all' ? ' is-on' : '') + '" data-cat="all">' +
+      '<span class="tile__ico">' + svg('all') + '</span>' +
+      '<span class="tile__lbl">SHOW<br>ALL</span>' +
+      '<span class="tile__n">' + D.places.length + '</span></button>';
+
+    D.categories.forEach(function (c) {
+      var n = D.places.filter(function (p) { return p.cats.indexOf(c.id) !== -1; }).length;
+      html += '<button type="button" class="tile' + (state.cat === c.id ? ' is-on' : '') + '"' +
+        ' data-cat="' + c.id + '" style="--c:' + c.color + ';--ci:' + c.ink + '">' +
+        '<span class="tile__ico">' + svg(c.id) + '</span>' +
+        '<span class="tile__lbl">' + esc(c.tile) + '</span>' +
+        '<span class="tile__n">' + n + '</span></button>';
+    });
+    rail.innerHTML = html;
+  }
+
+  rail.addEventListener('click', function (e) {
+    var t = e.target.closest('.tile');
+    if (!t) return;
+    var id = t.getAttribute('data-cat');
+    state.cat = (state.cat === id && id !== 'all') ? 'all' : id;
+    renderRail();
+    layoutPins();
+    renderList(true);
+    updateReadout();
+    var list = sortedPlaces();
+    if (list.length) fitToPlaces(list, true);
+  });
+
+  /* ---------------------------------------------------------------- LIST */
+  /* 250+ cards is a lot of DOM for a cheap phone, so the list renders in
+     pages. The map, filters and nearest-first sort all still see everything. */
+  var LIST_PAGE = 60;
+  var listShown = LIST_PAGE;
+
+  function cardHtml(p) {
+    var c = visualCat(p);
+    var open = isOpenNow(p);
+    var d = distTo(p);
+    var chips = p.cats.slice(0, 3).map(function (id) {
+      var cc = catById(id);
+      return '<span class="chip" style="--c:' + cc.color + ';--ci:' + cc.ink + '">' + esc(cc.tile) + '</span>';
+    }).join('');
+
+    return '<button type="button" class="card' + (state.sel === p.id ? ' is-sel' : '') + '"' +
+      ' data-id="' + p.id + '" style="--c:' + c.color + ';--ci:' + c.ink + '">' +
+      '<span class="card__badge">' + icoEl(c.id) + '</span>' +
+      '<span>' +
+        '<span class="card__name">' + esc(p.name) + '</span>' +
+        '<span class="card__meta">' +
+          '<span class="chip ' + (open ? 'chip--open' : 'chip--shut') + '">' + (open ? 'OPEN' : 'SHUT') + '</span>' +
+          (d !== null ? '<span class="card__dist">' + fmtDist(d) + '</span><span class="card__sep">·</span>' : '') +
+          '<span>' + esc(p.area) + '</span>' +
+        '</span>' +
+        '<span class="card__meta" style="margin-top:6px">' + chips + '</span>' +
+      '</span></button>';
+  }
+
+  function renderList(resetPage) {
+    var list = sortedPlaces();
+    var sortNote = state.user ? 'NEAREST FIRST' : 'OPEN FIRST';
+    if (resetPage) listShown = LIST_PAGE;
+
+    if (!list.length) {
+      viewList.innerHTML = '<p class="hint" style="padding:20px 4px;font-size:15px">' +
+        'NOTHING IN THIS CATEGORY YET. TAP <b>SHOW ALL</b> OR PICK ANOTHER TILE.</p>';
+      return;
+    }
+
+    var left = list.length - listShown;
+    var html =
+      '<div class="listhead"><span>' + sortNote + ' · <b>' + list.length + ' PLACES</b></span>' +
+      '<span>' + (state.user ? 'FROM YOUR PIN' : 'TAP ◎ FOR DISTANCE') + '</span></div>' +
+      list.slice(0, listShown).map(cardHtml).join('');
+
+    if (left > 0) {
+      html += '<button type="button" class="btn btn--ghost btn--sm" id="btn-more">' +
+        'SHOW ' + Math.min(LIST_PAGE, left) + ' MORE — ' + left + ' LEFT</button>';
+    }
+    viewList.innerHTML = html;
+  }
+
+  viewList.addEventListener('click', function (e) {
+    var c = e.target.closest('.card');
+    if (c) { select(c.getAttribute('data-id')); return; }
+    if (e.target.closest('#btn-more')) {
+      listShown += LIST_PAGE;
+      renderList();
+    }
+  });
+
+  /* ---------------------------------------------------------------- DETAIL */
+  function renderDetail(p) {
+    var c = visualCat(p);
+    var open = isOpenNow(p);
+    var d = distTo(p);
+    var demo = isPlaceholderPhone(p.phone);
+
+    var chips = p.cats.map(function (id) {
+      var cc = catById(id);
+      return '<span class="chip" style="--c:' + cc.color + ';--ci:' + cc.ink + '">' + esc(cc.label) + '</span>';
+    }).join('');
+    if (p.air) chips += '<span class="chip" style="--c:var(--hi-vis);--ci:#111">AIR ' + esc(p.air) + '</span>';
+    if (p.pickup) chips += '<span class="chip" style="--c:var(--alert);--ci:#fff">PICKUP AVAILABLE</span>';
+
+    viewDetail.innerHTML =
+      '<button type="button" class="btn btn--ghost btn--sm" id="btn-back">' +
+        '<span class="btn__ico">' + svg('back') + '</span><span class="btn__txt">BACK TO LIST</span></button>' +
+
+      '<h2 class="detail__name">' + esc(p.name) + '</h2>' +
+      '<p class="detail__where">' + esc(p.area) + ' · KOLKATA · ' + esc(p.id.toUpperCase()) + '</p>' +
+
+      (demo
+        ? '<div class="warnstrip"><b>SEED RECORD — NOT A REAL SHOP</b>' +
+          'The name, hours and phone number here are placeholders. Calling is disabled so nobody ' +
+          'reaches a stranger by accident. Replace this record in <code>assets/js/data.js</code>.</div>'
+        : '') +
+
+      '<div class="status' + (open ? '' : ' is-shut') + '">' +
+        '<span class="status__dot"></span>' +
+        '<span>' + (open ? 'OPEN NOW' : 'CLOSED NOW') + '</span>' +
+        '<span class="status__sub">' + esc(statusText(p)) + '</span>' +
+      '</div>' +
+
+      '<div class="grid2">' +
+        '<div class="stat"><div class="stat__k">DISTANCE</div><div class="stat__v">' +
+          (d === null ? '—' : fmtDist(d).replace(' ', '<small> ').replace(/$/, '</small>')) + '</div></div>' +
+        '<div class="stat"><div class="stat__k">RIDER CHECKS</div><div class="stat__v">' + (p.checks || 0) + '</div></div>' +
+        '<div class="stat"><div class="stat__k">HOURS</div><div class="stat__v" style="font-size:16px;line-height:1.25">' +
+          esc(hoursText(p)) + '</div></div>' +
+        '<div class="stat"><div class="stat__k">LAST VERIFIED</div><div class="stat__v">' + esc(shortDate(p.verified)) + '</div></div>' +
+      '</div>' +
+
+      '<div class="chips">' + chips + '</div>' +
+      '<p class="note">' + esc(p.note) + '</p>' +
+      '<p class="hint" style="margin-bottom:12px">PIN <b>' + p.lat.toFixed(5) + ', ' + p.lng.toFixed(5) + '</b> — handed straight to your navigation app.</p>' +
+      '<button type="button" class="btn btn--ghost btn--sm" id="btn-copy">' +
+        '<span class="btn__ico">' + svg('copy') + '</span><span class="btn__txt">COPY COORDINATES</span></button>';
+
+    $('btn-back').addEventListener('click', deselect);
+    $('btn-copy').addEventListener('click', function () { copyText(p.lat + ',' + p.lng, 'COORDINATES COPIED'); });
+  }
+
+  function select(id) {
+    var p = null;
+    for (var i = 0; i < D.places.length; i++) if (D.places[i].id === id) p = D.places[i];
+    if (!p) return;
+
+    state.sel = id;
+
+    viewList.hidden = true;
+    viewDetail.hidden = false;
+    renderDetail(p);
+    sheetScroll.scrollTop = 0;
+
+    sheetTitle.textContent = p.name;
+    dock.hidden = false;
+    document.documentElement.style.setProperty('--dock-h', dock.offsetHeight + 'px');
+
+    layoutPins();
+    layout();
+    setSnap('peek', true);
+    flyToPlace(p);
+    renderList();
+  }
+
+  function deselect() {
+    state.sel = null;
+    viewDetail.hidden = true;
+    viewList.hidden = false;
+    sheetTitle.textContent = 'NEAREST PLACES';
+    dock.hidden = true;
+    document.documentElement.style.setProperty('--dock-h', '0px');
+    layoutPins();
+    layout();
+    setSnap('peek', true);
+    renderList();
+  }
+
+  /* ------------------------------------------------------------- READOUT */
+  function updateReadout() {
+    var list = visiblePlaces();
+    var open = list.filter(isOpenNow).length;
+    readoutRight.textContent = open + ' OPEN · ' + list.length + ' TOTAL';
+
+    if (!state.user) {
+      readoutLeft.textContent = 'TAP ◎ TO FIND YOUR POSITION';
+      readoutLeft.parentNode.classList.remove('is-warn');
+      return;
+    }
+    var near = sortedPlaces()[0];
+    if (!near) { readoutLeft.textContent = 'NO PLACES IN THIS FILTER'; return; }
+    var d = distTo(near);
+    readoutLeft.textContent = 'NEAREST: ' + near.name + ' — ' + fmtDist(d);
+    readoutLeft.parentNode.classList.toggle('is-warn', d > 25);
+  }
+
+  /* -------------------------------------------------------------- SHEET UX */
+  var DESKTOP = window.matchMedia('(min-width: 760px)');
+  function isDocked() { return DESKTOP.matches; }
+
+  /* On a phone the header collapses to make room for the sheet; on a desktop
+     there is room for everything, so it stays put. */
+  function syncHud() {
+    hud.classList.toggle('hud--compact', !isDocked() && (!!state.sel || state.snap !== 'peek'));
+  }
+
+  function layout() {
+    var vh = window.innerHeight;
+    document.documentElement.style.setProperty('--hud-h', hud.offsetHeight + 'px');
+
+    if (isDocked()) {
+      sheet.classList.add('sheet--docked');
+      sheet.style.transform = 'translateY(0)';
+      snaps.peek = snaps.half = snaps.full = 0;
+      document.documentElement.style.setProperty('--peek-h', '0px');
+      syncHud();
+      return;
+    }
+    sheet.classList.remove('sheet--docked');
+
+    var H = sheet.offsetHeight;
+    var headH = sheetHead.offsetHeight;
+    var dockH = dock.hidden ? 0 : dock.offsetHeight;
+
+    /* The action dock is opaque and sits above the sheet, so the sheet must
+       peek *clear of* the dock — otherwise the drag handle and the chevrons
+       end up hidden behind it and the panel can never be swiped open. */
+    var peekVisible = dockH
+      ? dockH + headH + 10
+      : Math.max(headH + 96, 150);
+
+    snaps.peek = Math.max(0, H - peekVisible);
+    snaps.half = Math.max(0, H - Math.round(vh * 0.55));
+    snaps.full = 0;
+    if (snaps.half > snaps.peek) snaps.half = snaps.peek;
+  }
+
+  function setSnap(name, animate) {
+    state.snap = name;
+    layout();
+    var y = snaps[name];
+    if (isDocked()) { syncHud(); return; }
+    if (!animate) sheet.classList.add('is-dragging');
+    sheet.style.transform = 'translateY(' + y + 'px)';
+    if (!animate) {
+      requestAnimationFrame(function () { sheet.classList.remove('is-dragging'); });
+    }
+    document.documentElement.style.setProperty('--peek-h', Math.max(0, sheet.offsetHeight - y) + 'px');
+    syncHud();
+  }
+
+  /* Drag: a 3-state snap sheet. Swipe hard, it follows. No precision needed. */
+  (function dragSheet() {
+    var startY = 0, startT = 0, lastY = 0, lastTime = 0;
+    var dragging = false, moved = false;
+
+    function curY() {
+      var m = /translateY\(([-\d.]+)px\)/.exec(sheet.style.transform || '');
+      return m ? parseFloat(m[1]) : snaps.peek;
+    }
+
+    sheetHead.addEventListener('pointerdown', function (e) {
+      if (isDocked()) return;
+      if (e.button !== undefined && e.button !== 0) return;
+      dragging = true;
+      moved = false;
+      startY = e.clientY;
+      startT = curY();
+      lastY = e.clientY;
+      lastTime = performance.now();
+      sheet.classList.add('is-dragging');
+      /* NOTE: no preventDefault() and no immediate setPointerCapture() here.
+         Either one would retarget the compatibility click event and swallow
+         taps on the chevron buttons that live inside the head. Capture is
+         taken only once a real drag is under way. */
+    });
+
+    sheetHead.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      var dy = e.clientY - startY;
+
+      if (!moved && Math.abs(dy) > 6) {
+        moved = true;
+        try { sheetHead.setPointerCapture(e.pointerId); } catch (err) {}
+      }
+      if (!moved) return;
+
+      var y = Math.min(snaps.peek + 40, Math.max(snaps.full - 30, startT + dy));
+      sheet.style.transform = 'translateY(' + y + 'px)';
+      document.documentElement.style.setProperty('--peek-h', Math.max(0, sheet.offsetHeight - y) + 'px');
+      lastY = e.clientY;
+      lastTime = performance.now();
+    });
+
+    function endDrag(e) {
+      if (!dragging) return;
+      dragging = false;
+      sheet.classList.remove('is-dragging');
+      if (!moved) return;
+
+      var dy = (e.clientY !== undefined ? e.clientY : lastY) - startY;
+      var dt = Math.max(1, performance.now() - lastTime);
+      var y = curY();
+
+      /* Fast flick = move a whole state, regardless of distance travelled. */
+      var flick = Math.abs(dy) > 34 && dt < 260;
+      var order = ['full', 'half', 'peek'];
+      var idx = 0, best = Infinity;
+      order.forEach(function (k, i) { var dd = Math.abs(snaps[k] - y); if (dd < best) { best = dd; idx = i; } });
+
+      var target;
+      if (flick) {
+        target = order[Math.min(order.length - 1, Math.max(0, idx + (dy < 0 ? -1 : 1)))];
+      } else {
+        target = order[idx];
+      }
+      setSnap(target, true);
+    }
+
+    sheetHead.addEventListener('pointerup', endDrag);
+    sheetHead.addEventListener('pointercancel', endDrag);
+
+    /* Tap the head to cycle states — the fallback for numb fingers. */
+    sheetHead.addEventListener('click', function () {
+      if (moved) return;
+      setSnap(state.snap === 'peek' ? 'half' : (state.snap === 'half' ? 'full' : 'peek'), true);
+    });
+  })();
+
+  $('snap-up').addEventListener('click', function (e) {
+    e.stopPropagation();
+    var order = ['peek', 'half', 'full'];
+    var i = order.indexOf(state.snap);
+    setSnap(order[Math.min(order.length - 1, i + 1)], true);
+  });
+  $('snap-down').addEventListener('click', function (e) {
+    e.stopPropagation();
+    var order = ['full', 'half', 'peek'];
+    var i = order.indexOf(state.snap);
+    setSnap(order[Math.min(order.length - 1, i + 1)], true);
+  });
+
+  /* ------------------------------------------------------------- GEO / SOS */
+  function locate() {
+    if (!navigator.geolocation) { showToast('THIS BROWSER CANNOT SHARE LOCATION'); return; }
+    var btn = $('btn-locate');
+    btn.classList.add('is-busy');
+    readoutLeft.textContent = 'ACQUIRING SATELLITES…';
+
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      btn.classList.remove('is-busy');
+      state.user = { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy };
+
+      if (meMarker) map.removeLayer(meMarker);
+      if (meCircle) map.removeLayer(meCircle);
+
+      meCircle = L.circle([state.user.lat, state.user.lng], {
+        radius: Math.max(30, state.user.acc || 40),
+        color: '#2979FF', weight: 2, opacity: .7, fillColor: '#2979FF', fillOpacity: .12, interactive: false
+      }).addTo(map);
+
+      meMarker = L.marker([state.user.lat, state.user.lng], {
+        icon: L.divIcon({ className: '', html: '<div class="me-pin"></div>', iconSize: [30, 30], iconAnchor: [15, 15] }),
+        interactive: false, zIndexOffset: 900
+      }).addTo(map);
+
+      var b = L.latLngBounds(D.meta.bounds);
+      var inside = b.contains([state.user.lat, state.user.lng]);
+
+      renderList(true);
+      updateReadout();
+      $('my-coords').innerHTML = 'YOUR PIN: <b>' + state.user.lat.toFixed(5) + ', ' + state.user.lng.toFixed(5) +
+        '</b> · ACCURATE TO ~' + Math.round(state.user.acc || 0) + ' M';
+
+      if (inside) {
+        showToast('POSITION LOCKED — SORTED BY NEAREST');
+        map.flyTo([state.user.lat, state.user.lng], 14, { duration: .8 });
+      } else {
+        showToast('YOU ARE OUTSIDE KOLKATA — SHOWING NEAREST ANYWAY');
+        fitToPlaces(sortedPlaces(), true);
+      }
+    }, function (err) {
+      btn.classList.remove('is-busy');
+      var msg = err && err.code === 1
+        ? 'LOCATION BLOCKED — ALLOW IT IN BROWSER SETTINGS'
+        : 'COULD NOT GET A FIX — MOVE INTO THE OPEN';
+      showToast(msg);
+      readoutLeft.textContent = 'NO GPS FIX · SORTED BY OPEN NOW';
+    }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
+  }
+
+  /* -------------------------------------------------- NAVIGATE / CALL / SOS */
+  /* The whole point of the app: one tap hands the coordinates to the rider's
+     native Google Maps app, which starts turn-by-turn immediately. */
+  function navUrl(p) {
+    return 'https://www.google.com/maps/dir/?api=1' +
+      '&destination=' + p.lat.toFixed(6) + ',' + p.lng.toFixed(6) +
+      '&travelmode=driving&dir_action=navigate';
+  }
+
+  function currentPlace() {
+    if (!state.sel) return null;
+    for (var i = 0; i < D.places.length; i++) if (D.places[i].id === state.sel) return D.places[i];
+    return null;
+  }
+
+  function isMobile() {
+    return /Android|iPhone|iPad|iPod|Mobile|Opera Mini|IEMobile/i.test(navigator.userAgent);
+  }
+
+  $('btn-nav').addEventListener('click', function () {
+    var p = currentPlace();
+    if (!p) return;
+    var url = navUrl(p);
+    showToast('OPENING NAVIGATION — ' + p.name);
+    if (isMobile()) window.location.href = url;
+    else window.open(url, '_blank', 'noopener');
+  });
+
+  $('btn-call').addEventListener('click', function () {
+    var p = currentPlace();
+    if (!p) return;
+    if (isPlaceholderPhone(p.phone)) {
+      /* Refuse rather than dial — see isPlaceholderPhone(). */
+      showToast('SEED RECORD — NO REAL NUMBER TO DIAL');
+      return;
+    }
+    showToast('DIALING ' + p.phone);
+    window.location.href = 'tel:' + String(p.phone).replace(/[^\d+]/g, '');
+  });
+
+  function smsBody() {
+    var coords = state.user
+      ? state.user.lat.toFixed(6) + ',' + state.user.lng.toFixed(6)
+      : '(position not available)';
+    return 'SOS - two-wheeler breakdown in Kolkata. My location: ' + coords +
+      ' - https://maps.google.com/?q=' + encodeURIComponent(coords);
+  }
+
+  function copyText(text, okMsg) {
+    function done() { showToast(okMsg || 'COPIED'); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { legacyCopy(text, done); });
+    } else { legacyCopy(text, done); }
+  }
+
+  function legacyCopy(text, done) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) { showToast('COPY FAILED — SELECT MANUALLY'); }
+    document.body.removeChild(ta);
+  }
+
+  /* ------------------------------------------------------------- EMERGENCY */
+  var EMERGENCY = [
+    { n: '112', t: 'ALL EMERGENCY', s: 'Police, fire and ambulance — one number', cls: '' },
+    { n: '100', t: 'KOLKATA POLICE', s: 'Control room, 24 hours', cls: 'dial--police' },
+    { n: '108', t: 'AMBULANCE', s: 'Emergency ambulance service', cls: '' },
+    { n: '1073', t: 'ROAD ACCIDENT HELPLINE', s: 'National highway accident response', cls: '' },
+    { n: '101', t: 'FIRE BRIGADE', s: 'West Bengal fire and rescue', cls: 'dial--fire' }
+  ];
+
+  function renderEmergency() {
+    $('emergency-list').innerHTML = EMERGENCY.map(function (e) {
+      return '<button type="button" class="dial ' + e.cls + '" data-tel="' + e.n + '">' +
+        '<span class="dial__n">' + e.n + '</span>' +
+        '<span class="dial__t">' + esc(e.t) + '<small>' + esc(e.s) + '</small></span>' +
+        '<span class="btn__ico" style="margin-left:auto;width:26px;height:26px">' + svg('phone') + '</span>' +
+        '</button>';
+    }).join('');
+  }
+
+  $('emergency-list').addEventListener('click', function (e) {
+    var b = e.target.closest('.dial');
+    if (b) window.location.href = 'tel:' + b.getAttribute('data-tel');
+  });
+
+  $('btn-share-sms').addEventListener('click', function () {
+    var body = encodeURIComponent(smsBody());
+    /* iOS wants &body=, Android wants ?body= — this covers both. */
+    var ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    window.location.href = ios ? 'sms:&body=' + body : 'sms:?body=' + body;
+  });
+
+  $('btn-copy-coords').addEventListener('click', function () {
+    var t = state.user ? state.user.lat.toFixed(6) + ',' + state.user.lng.toFixed(6) : '';
+    if (!t) { showToast('NO POSITION YET — TAP ◎ FIRST'); return; }
+    copyText(t, 'COORDINATES COPIED');
+  });
+
+  $('btn-sos').addEventListener('click', function () { modal.hidden = false; });
+  $('btn-close-modal').addEventListener('click', function () { modal.hidden = true; });
+
+  /* ----------------------------------------------------------------- THEME */
+  function setTheme(t) {
+    state.theme = t;
+    document.documentElement.setAttribute('data-theme', t);
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', t === 'night' ? '#1C1C1C' : '#FF5722');
+    var b = $('btn-theme').querySelector('.iconbtn__ico');
+    b.innerHTML = svg(t === 'night' ? 'sun' : 'moon');
+    b.setAttribute('data-ico', t === 'night' ? 'sun' : 'moon');
+    try { localStorage.setItem('sos-theme', t); } catch (e) {}
+    applyTiles();
+  }
+
+  $('btn-theme').addEventListener('click', function () {
+    setTheme(state.theme === 'night' ? 'day' : 'night');
+  });
+
+  function initTheme() {
+    var saved = null;
+    try { saved = localStorage.getItem('sos-theme'); } catch (e) {}
+    if (saved === 'day' || saved === 'night') { setTheme(saved); return; }
+    var h = new Date().getHours();
+    setTheme((h >= 19 || h < 6) ? 'night' : 'day');
+  }
+
+  /* ----------------------------------------------------------------- TOAST */
+  var toastTimer = null;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.hidden = true; }, 3200);
+  }
+
+  /* ------------------------------------------------------------------ MISC */
+  $('btn-zin').addEventListener('click', function () { map.zoomIn(); });
+  $('btn-zout').addEventListener('click', function () { map.zoomOut(); });
+  $('btn-locate').addEventListener('click', locate);
+
+  $('stamp').innerHTML = D.places.length + ' SEED RECORDS ACROSS ' +
+    new Set(D.places.map(function (p) { return p.area; })).size + ' KOLKATA LOCALITIES · ' +
+    'LIST UPDATED <b>' + esc(D.meta.updated) + '</b> · MAP LOCKED TO GREATER KOLKATA.';
+
+  window.addEventListener('resize', function () {
+    layout();
+    setSnap(state.snap, false);
+    map.invalidateSize();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      if (!modal.hidden) modal.hidden = true;
+      else if (state.sel) deselect();
+    }
+  });
+
+  /* ------------------------------------------------------------------ BOOT */
+  function paintStaticIcons() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-ico]'), function (el) {
+      if (el.id === 'btn-theme' || el.closest('#btn-theme')) return;
+      el.innerHTML = svg(el.getAttribute('data-ico'));
+    });
+  }
+
+  function boot() {
+    paintStaticIcons();
+    initTheme();
+    renderEmergency();
+    renderRail();
+    buildMarkers();
+    layoutPins();
+    renderList(true);
+    updateReadout();
+    layout();
+    setSnap('peek', false);
+
+    /* Nudge first-time riders toward the two controls that matter. */
+    setTimeout(function () { showToast('TAP ◎ TO FIND YOUR POSITION'); }, 900);
+  }
+
+  boot();
+
+  /* Offline shell so a stranded rider still gets the app with no signal. */
+  if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () { /* fine without it */ });
+    });
+  }
+})();

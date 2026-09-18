@@ -1,0 +1,26 @@
+{
+  "name": "Two-Wheeler SOS Map — Kolkata",
+  "short_name": "SOS Kolkata",
+  "description": "Breakdown SOS map for Kolkata riders: mechanics, spare-part shops, air points, towing and safe parking. One tap to navigate.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1C1C1C",
+  "theme_color": "#FF5722",
+  "categories": ["navigation", "travel", "utilities"],
+  "icons": [
+    {
+      "src": "assets/img/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/img/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

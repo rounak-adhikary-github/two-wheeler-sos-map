@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="day">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Two-Wheeler SOS Map — Kolkata</title>
+<meta name="description" content="Breakdown SOS map for Kolkata riders: trusted mechanics, spare-part shops, air points, towing and safe parking. One tap to navigate.">
+<meta name="theme-color" content="#FF5722">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SOS Kolkata">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/img/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/img/icon.svg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<!-- ============================================================ TOP HUD -->
+<header class="hud" id="hud">
+  <div class="hud__stripe" aria-hidden="true"></div>
+
+  <div class="hud__row">
+    <div class="brand">
+      <span class="brand__mark">SOS</span>
+      <span class="brand__txt">
+        <b>KOLKATA</b>
+        <small>TWO-WHEELER SOS MAP</small>
+      </span>
+    </div>
+    <div class="hud__btns">
+      <button type="button" class="iconbtn" id="btn-theme" aria-label="Switch day / night mode" title="Day / Night">
+        <span class="iconbtn__ico" data-ico="moon"></span>
+      </button>
+      <button type="button" class="iconbtn iconbtn--alert" id="btn-sos" aria-label="Emergency numbers and help" title="Emergency">
+        <span class="iconbtn__ico" data-ico="warning"></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="hud__filters" id="hud-filters">
+    <div class="rail" id="rail" role="group" aria-label="Filter by need"></div>
+    <div class="readout">
+      <span class="readout__left" id="readout-left">TAP ◎ TO FIND YOUR POSITION</span>
+      <span class="readout__right" id="readout-right">—</span>
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================ MAP -->
+<div id="map" class="map" role="application" aria-label="Map of Kolkata help points"></div>
+
+<!-- ============================================================ SIDE CONTROLS -->
+<div class="side" id="side">
+  <button type="button" class="fab" id="btn-zin" aria-label="Zoom in"><span class="fab__ico" data-ico="plus"></span></button>
+  <button type="button" class="fab" id="btn-zout" aria-label="Zoom out"><span class="fab__ico" data-ico="minus"></span></button>
+  <button type="button" class="fab fab--go" id="btn-locate" aria-label="Find my position"><span class="fab__ico" data-ico="target"></span></button>
+</div>
+
+<!-- ============================================================ BOTTOM SHEET -->
+<section class="sheet" id="sheet" aria-label="Results">
+  <div class="sheet__head" id="sheet-head">
+    <div class="sheet__stripe" aria-hidden="true"></div>
+    <div class="sheet__grip" aria-hidden="true"><span class="sheet__handle"></span></div>
+    <div class="sheet__bar">
+      <span class="sheet__title" id="sheet-title">NEAREST PLACES</span>
+      <div class="sheet__snaps">
+        <button type="button" class="snapbtn" id="snap-up" aria-label="Expand panel"><span data-ico="chevup"></span></button>
+        <button type="button" class="snapbtn" id="snap-down" aria-label="Collapse panel"><span data-ico="chevdown"></span></button>
+      </div>
+    </div>
+  </div>
+  <div class="sheet__scroll" id="sheet-scroll">
+    <div class="view" id="view-list"></div>
+    <div class="view" id="view-detail" hidden></div>
+  </div>
+</section>
+
+<!-- ============================================================ ACTION DOCK -->
+<div class="dock" id="dock" hidden>
+  <button type="button" class="btn btn--call" id="btn-call">
+    <span class="btn__ico" data-ico="phone"></span><span class="btn__txt">CALL MECHANIC</span>
+  </button>
+  <button type="button" class="btn btn--nav" id="btn-nav">
+    <span class="btn__ico" data-ico="navigate"></span><span class="btn__txt">NAVIGATE NOW</span>
+  </button>
+</div>
+
+<!-- ============================================================ EMERGENCY MODAL -->
+<div class="modal" id="modal" hidden>
+  <div class="modal__bar">
+    <div class="modal__stripe" aria-hidden="true"></div>
+    <div class="modal__top">
+      <h2 class="modal__title">EMERGENCY &amp; HELP</h2>
+      <button type="button" class="iconbtn iconbtn--big" id="btn-close-modal" aria-label="Close">
+        <span class="iconbtn__ico" data-ico="close"></span>
+      </button>
+    </div>
+  </div>
+  <div class="modal__scroll">
+    <p class="kicker">DIAL DIRECTLY</p>
+    <div class="stack" id="emergency-list"></div>
+
+    <p class="kicker">SHARE YOUR POSITION</p>
+    <button type="button" class="btn btn--ghost" id="btn-share-sms">
+      <span class="btn__ico" data-ico="share"></span><span class="btn__txt">SEND MY PIN BY SMS</span>
+    </button>
+    <button type="button" class="btn btn--ghost" id="btn-copy-coords">
+      <span class="btn__ico" data-ico="copy"></span><span class="btn__txt">COPY MY COORDINATES</span>
+    </button>
+    <p class="hint" id="my-coords">POSITION NOT ACQUIRED YET — TAP ◎ ON THE MAP.</p>
+
+    <p class="kicker">HOW TO USE THIS MAP</p>
+    <ul class="facts">
+      <li>Pick a need from the tile rail — AIR, STRUCTURE, CONTROLS, TOWING, PARKING, MECHANIC.</li>
+      <li>Tap any badge, then hit <b>NAVIGATE NOW</b>. Coordinates are handed to the Google Maps app on your phone.</li>
+      <li>Swipe the bottom panel up for details. Swipe it down to get the map back.</li>
+      <li>The map is locked to Greater Kolkata, so you can never pan off into nowhere.</li>
+    </ul>
+
+    <p class="kicker">ABOUT THE DATA — READ THIS</p>
+    <p class="hint" id="about-data">
+      This build ships with <b>seed data</b>. The neighbourhood names and coordinates are real
+      Kolkata geography, but the <b>business names, opening hours, verification dates and phone
+      numbers are synthetic placeholders</b> — they are not verified shops, and the numbers are
+      not real contacts. That is why <b>CALL is disabled</b> on every record: dialling a
+      placeholder could reach a stranger.
+      <br><br>
+      To go live, open <code>assets/js/data.js</code>, replace each record with a real shop that
+      has agreed to be listed, then delete the rest. A real number makes the call button work.
+    </p>
+    <p class="hint" id="stamp"></p>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

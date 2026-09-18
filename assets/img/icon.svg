@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Kolkata two-wheeler SOS map">
+  <rect width="512" height="512" rx="104" fill="#FF5722"/>
+  <rect x="24" y="24" width="464" height="464" rx="84" fill="none" stroke="#0B0B0B" stroke-width="28"/>
+  <g transform="translate(96 96) scale(13.333)" fill="#0B0B0B">
+    <path d="M22.6 19.1 13.5 10c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6.1 6 9.1 1.7 4.8C.5 7.2 1 10.2 3 12.2c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.2-2.2c.4-.5.4-1.1 0-1.5z"/>
+  </g>
+</svg>
