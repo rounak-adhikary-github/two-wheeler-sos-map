@@ -75,6 +75,16 @@ coordinates to the native Google Maps app in one tap. Hosted free on GitHub Page
 - `.btn` forces uppercase — `.support__ig .btn__txt` overrides it so the handle keeps its case.
 
 ## Gotchas already paid for
+- **Horizontal scrollers need a wheel handler.** A mouse wheel does not scroll horizontally by
+  default, so a `overflow-x: auto` rail with a hidden scrollbar is **unreachable on desktop**.
+  Fix = visible slim scrollbar + a `wheel` listener that maps `deltaY` to `scrollLeft` (only
+  `preventDefault` while the rail can actually move) + edge fades. Add
+  `scroll-padding-left/right` too, or `scroll-snap` leaves `scrollLeft` at 12 on load and the
+  left fade shows at rest.
+- **Fades must use a per-theme colour.** `transparent` in a gradient fades through black —
+  use a `--surface-fade` variable per theme.
+- **`brand` means MANUFACTURER only.** Shop types (tyre/battery/spares/towing) are covered by
+  their category tile; putting them in `brand` renders two tiles with the same label.
 - Leaflet `_getSubdomain` throws when `subdomains` is omitted. Always pass a string.
 - Do not apply `contrast()` filters to the light basemap — it erases the road network.
 - The action dock overlays the sheet; peek offset must include `dock.offsetHeight`.

@@ -17,7 +17,7 @@ handlebar mount. Every design decision follows from that.
 | **Tap to Navigate** | Hands `lat,lng` to the native Google Maps app with `dir_action=navigate`, so turn-by-turn starts immediately |
 | **Call the shop** | Every listing with a published number has a live CALL button. The two without one are visibly disabled |
 | **Brand filter** | One tile per manufacturer — Hero, Honda, TVS, Bajaj, Enfield, Yamaha, Suzuki, KTM. Pick your bike, see who services it |
-| **Need filter** | Category tiles for Mechanics, Towing, Tyre/Air, Battery, Structure and Controls. Empty categories are hidden rather than shown as dead ends |
+| **Need filter** | 6 category tiles (Mechanics, Towing, Tyre/Air, Battery, Structure, Controls) plus 9 brand tiles, in one horizontally scrolling rail. Empty categories are hidden rather than shown as dead ends |
 | **Nearest-first** | One tap on ◎ sorts everything by real distance from your position |
 | **Swipe-over-tap panel** | Three-state bottom sheet you can flick open with a thumb; chevrons as a fallback |
 | **Four ways out of a place** | Red ✕ in the panel bar, tap anywhere on the map, BACK TO LIST inside the details, or Escape on a keyboard |
@@ -25,6 +25,16 @@ handlebar mount. Every design decision follows from that.
 | **Offline shell** | A service worker caches the app and any map tiles you have already viewed |
 | **Day / night** | Auto-selects by time of day, manual toggle in the header |
 | **Emergency panel** | 112 / 100 / 108 / 1073 / 1033 / 101 plus Hero / Honda / TVS / Bajaj / Royal Enfield helplines, and "send my pin by SMS" |
+
+### The filter rail scrolls
+
+16 tiles is far wider than any screen. Two things made the far end unreachable on a desktop:
+the scrollbar was hidden, and **a mouse wheel does not scroll horizontally by default**. Both
+are fixed — the rail now has a slim visible scrollbar, a `wheel` handler that translates
+vertical wheel into horizontal scroll (only swallowing the event while the rail can actually
+move), and edge fades that appear whenever there is more content off-screen in that direction.
+`scroll-padding-left/right` keeps the snap from leaving `scrollLeft` at 12 on load, which used
+to make the left fade show at rest.
 
 ### Getting back out of a place
 
@@ -153,7 +163,7 @@ Everything lives in **`assets/js/data.js`**. Nothing else needs to change.
   lat: 22.4780, lng: 88.3600,                     // decimal degrees
   cats: ['mechanic'],                             // air | structural | control | tow | parking | mechanic
   primary: 'mechanic',                            // icon + colour on the map badge
-  brand: 'HONDA',                                 // drives the brand filter tile
+  brand: 'HONDA',                                 // MANUFACTURER only -> brand filter tile
 
   phone: '+91 98300 00046',                       // the real number, or '' if none
   contact: true,                                  // <-- THIS is what arms CALL
@@ -166,6 +176,18 @@ Everything lives in **`assets/js/data.js`**. Nothing else needs to change.
   verified: '2026-09-18'                          // YYYY-MM-DD
 }
 ```
+
+### `brand` means manufacturer, not shop type
+
+`brand` drives the second row of filter tiles and is meant for **bike manufacturers only**
+(Hero, Honda, TVS, Bajaj, Royal Enfield, Yamaha, Suzuki, KTM) plus the pseudo-brand
+`LOCAL SHOP` for independent workshops. Everything else — tyre shops, battery dealers,
+spare-parts shops, towing — is already covered by its **category** tile, so leave `brand` off
+those records.
+
+Carrying a shop type in `brand` as well produces two tiles with the same label doing different
+things (a `BATTERY` category tile *and* a `BATTERY` brand tile), which is confusing and wastes
+rail space. This was fixed once already; do not reintroduce it.
 
 ### The `contact` flag controls the call button
 

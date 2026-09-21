@@ -536,6 +536,7 @@
       });
     }
     rail.innerHTML = html;
+    syncRailFade();
   }
 
   function applyFilter() {
@@ -546,6 +547,32 @@
     var list = sortedPlaces();
     if (list.length) fitToPlaces(list, true);
   }
+
+  /* The tile rail is wider than any screen. A mouse wheel does not scroll
+     horizontally by default, which made every tile past the right edge
+     unreachable on a desktop. Translate vertical wheel into rail scroll, and
+     only swallow the event while the rail can actually move, so the page still
+     scrolls normally once you hit either end. */
+  function syncRailFade() {
+    var wrap = $('rail-wrap');
+    if (!wrap) return;
+    var max = rail.scrollWidth - rail.clientWidth;
+    wrap.classList.toggle('is-less', rail.scrollLeft > 2);
+    wrap.classList.toggle('is-more', max > 2 && rail.scrollLeft < max - 2);
+  }
+
+  rail.addEventListener('wheel', function (e) {
+    var max = rail.scrollWidth - rail.clientWidth;
+    if (max <= 2) return;
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return; /* already horizontal */
+    var canMove = e.deltaY < 0 ? rail.scrollLeft > 0 : rail.scrollLeft < max;
+    if (!canMove) return;
+    e.preventDefault();
+    rail.scrollLeft = Math.max(0, Math.min(max, rail.scrollLeft + e.deltaY));
+    syncRailFade();
+  }, { passive: false });
+
+  rail.addEventListener('scroll', syncRailFade, { passive: true });
 
   rail.addEventListener('click', function (e) {
     var t = e.target.closest('.tile');
@@ -1166,6 +1193,7 @@
     'captured <b>' + esc(D.meta.updated) + '</b> · no fabricated records.';
 
   window.addEventListener('resize', function () {
+    syncRailFade();
     layout();
     setSnap(state.snap, false);
     map.invalidateSize();

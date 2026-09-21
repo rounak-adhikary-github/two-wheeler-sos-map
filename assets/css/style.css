@@ -49,6 +49,7 @@
   --line-soft:  #C4C4C4;
   --shadow:     0 10px 30px rgba(0, 0, 0, .28);
   --pin-ring:   rgba(0, 0, 0, .22);
+  --surface-fade: rgba(255, 255, 255, 0);
 }
 
 /* Night mode — deep charcoal, never pure black (halation kills legibility) */
@@ -63,6 +64,7 @@
   --line-soft:  #454545;
   --shadow:     0 10px 30px rgba(0, 0, 0, .7);
   --pin-ring:   rgba(0, 0, 0, .6);
+  --surface-fade: rgba(36, 36, 36, 0);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -178,6 +180,11 @@ body { -webkit-user-select: none; user-select: none; }
 .hud__filters { overflow: hidden; transition: max-height .22s ease, opacity .18s ease; }
 .hud--compact .hud__filters { max-height: 0; opacity: 0; }
 
+/* The rail holds 20 tiles, which is far wider than any screen. Two things used
+   to make the far end unreachable on a desktop: the scrollbar was hidden, and a
+   mouse wheel does not scroll horizontally by default. Both are fixed here. */
+.railwrap { position: relative; }
+
 .rail {
   display: flex;
   gap: 10px;
@@ -185,10 +192,45 @@ body { -webkit-user-select: none; user-select: none; }
   overflow-y: hidden;
   padding: 8px 12px 10px;
   scroll-snap-type: x proximity;
-  scrollbar-width: none;
+  /* Without this the snap aligns the first tile to the padding edge, leaving
+     scrollLeft at 12 at rest - which made the left fade show on load. */
+  scroll-padding-left: 12px;
+  scroll-padding-right: 12px;
+  /* A slim visible scrollbar is the only permanent hint that more tiles exist
+     off-screen. Hidden scrollbars are the reason this bug shipped. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-soft) transparent;
   -webkit-overflow-scrolling: touch;
 }
-.rail::-webkit-scrollbar { display: none; }
+.rail::-webkit-scrollbar { height: 9px; }
+.rail::-webkit-scrollbar-track { background: transparent; }
+.rail::-webkit-scrollbar-thumb {
+  background: var(--line-soft);
+  border-radius: 5px;
+}
+.rail::-webkit-scrollbar-thumb:hover { background: var(--ink-dim); }
+
+/* Edge fades, toggled from JS, so it is obvious the row continues. */
+.railwrap::before, .railwrap::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 9px;
+  width: 40px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .16s linear;
+  z-index: 2;
+}
+.railwrap::before {
+  left: 0;
+  background: linear-gradient(to right, var(--surface), var(--surface-fade));
+}
+.railwrap::after {
+  right: 0;
+  background: linear-gradient(to left, var(--surface), var(--surface-fade));
+}
+.railwrap.is-less::before { opacity: 1; }
+.railwrap.is-more::after { opacity: 1; }
 
 .tile {
   flex: 0 0 auto;
