@@ -6,28 +6,29 @@ find mechanics, spare-part shops, air points, tow vans and safe parking, then ha
 coordinates to the native Google Maps app in one tap. Hosted free on GitHub Pages.
 
 ## Dataset
-- **125 REAL listings only. No fabricated records.** `assets/js/data.js` contains nothing
-  synthetic.
-  - Brands: Royal Enfield 26, Bajaj 21, Hero 18, TVS 15, Honda 14, Yamaha 13, Suzuki 12,
-    KTM 3, plus 3 towing operators. 78 localities.
-  - 123 of 125 have a published phone number. The other 2 (Honda BigWing Bouchtala,
-    TowMigo) have `contact: false` and a visibly disabled CALL button.
-  - All are authorised service centres sourced 2026-09-18 from manufacturer ASC
-    directories, public authorised-dealer directories, Royal Enfield's own dealer locator,
-    and the towing operators' own sites. Each record stores `src`.
-- **No placeholder or sample data anywhere in the project.** The 257 archived seed records
-  were deleted on the user's instruction. They remain recoverable from git commit
-  `518df80` via `git show 518df80:assets/js/seed-records.js` — but do not restore them
-  without being asked.
-- **`hours: null` on every record.** These directories do not publish opening times, so the
-  app shows a yellow dot and `CALL AHEAD` rather than inventing a state. Never fabricate hours
-  for a real business.
-- **Pin dot semantics:** yellow = hours unknown but callable; red = no number on file.
+- **170 REAL listings only. No fabricated records.** `assets/js/data.js` contains nothing
+  synthetic. 169 callable, 92 localities.
+  - Authorised service centres: Royal Enfield 26, Bajaj 21, Hero 18, TVS 15, Honda 15,
+    Yamaha 13, Suzuki 12, KTM 3.
+  - **22 independent local workshops** (`brand: 'LOCAL SHOP'`).
+  - **10 towing / recovery** (`brand: 'TOWING'`), 7 tyre/puncture (`brand: 'TYRE'`),
+    5 battery dealers (`brand: 'BATTERY'`), 3 spare-parts shops (`brand: 'SPARES'`).
+  - Sources by record count: manufacturer directories 122, **Google Maps 33**, public business
+    directories 11, operators' own sites 4. Each record stores `src`.
+- **Categories:** mechanic, tow, air (labelled TYRE / AIR / PUNCTURE), battery, structural,
+  control, parking. `battery` uses colour `#FF2D95`.
+- **Hours:** only the 13 records whose source confirmed "open 24 hours" carry real hours
+  (`{o:0, c:24}`) and show a green dot. The other 157 have `hours: null` → yellow dot,
+  `CALL AHEAD`. Never infer open/closed from a closing time alone — Maps gives closes-at but
+  not opens-at, and only at capture time.
+- **No placeholder or sample data anywhere.** The 257 archived seed records were deleted on
+  the user's instruction; recoverable from git commit `518df80` if ever needed, but do not
+  restore them without being asked.
 - **`contact: true` is the only thing that arms CALL.** Never set it on an unverified number.
-  `isPlaceholderPhone()` stays as a backstop so a placeholder-style number can never dial,
-  whatever the flag says.
-- **Known gap: no puncture shops, tyre dealers or air points.** Numbers for those could not be
-  verified, so the app hides the empty category filters rather than inventing listings.
+  `isPlaceholderPhone()` stays as a backstop.
+- **Google Maps ToS caveat:** 33 records came from Maps place listings. Fine for a personal
+  project, but needs licensing or re-collection before running at scale. Documented in the
+  README — do not quietly remove that note.
 
 ## Repo
 - Remote: `git@github.com:rounak-adhikary-github/two-wheeler-sos-map.git`, branch **`master`**

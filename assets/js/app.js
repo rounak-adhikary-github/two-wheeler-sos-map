@@ -19,6 +19,7 @@
     tow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2.4 16.4V8.4H10v8"/><path d="M10 12h4.2l3.4 4.4"/><path d="M2.4 16.4h2.1"/><circle cx="7.1" cy="17.5" r="2.3"/><circle cx="16.5" cy="17.5" r="2.3"/><path d="M11.4 17.5h2.8"/><path d="M20.5 17.5h1.1"/><path d="M5 8.4V5.9h4.6"/></svg>',
     parking: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4.5"/><path d="M9.4 17.2V6.8h3.3a3.1 3.1 0 0 1 0 6.2H9.4"/></svg>',
     mechanic: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.6 19.1 13.5 10c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6.1 6 9.1 1.7 4.8C.5 7.2 1 10.2 3 12.2c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.2-2.2c.4-.5.4-1.1 0-1.5z"/></svg>',
+    battery: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="2.4" y="7" width="16.2" height="11" rx="2.6"/><path d="M18.6 10.4h1.6a1.2 1.2 0 0 1 1.2 1.2v1.8a1.2 1.2 0 0 1-1.2 1.2h-1.6" fill="currentColor" stroke="none"/><path d="M11.6 9.3 8.9 12.8h2.9l-1.6 3.1" stroke-linecap="round"/></svg>',
 
     navigate: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.1 3.1 21.6l8.9-4.3 8.9 4.3z"/></svg>',
     phone: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.7 10.9a15.1 15.1 0 0 0 6.4 6.4l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.58 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.4 11.4 0 0 0 .58 3.6 1 1 0 0 1-.25 1z"/></svg>',
@@ -232,7 +233,7 @@
   }
 
   /* Tiles are narrow, so long brand names get a short form. */
-  var BRAND_SHORT = { 'ROYAL ENFIELD': 'ENFIELD', 'TOWING': 'TOWING' };
+  var BRAND_SHORT = { 'ROYAL ENFIELD': 'ENFIELD', 'TOWING': 'TOWING', 'LOCAL SHOP': 'LOCAL' };
   function brandShort(b) { return BRAND_SHORT[b] || b; }
 
   /* Callable records first — the only ones a rider can act on from the roadside.
@@ -987,6 +988,7 @@
     { n: '100', t: 'KOLKATA POLICE', s: 'Control room, 24 hours', cls: 'dial--police' },
     { n: '108', t: 'AMBULANCE', s: 'Emergency ambulance service', cls: '' },
     { n: '1073', t: 'ROAD ACCIDENT HELPLINE', s: 'National highway accident response', cls: '' },
+    { n: '1033', t: 'HIGHWAY BREAKDOWN', s: 'NHAI helpline for national highways', cls: '' },
     { n: '101', t: 'FIRE BRIGADE', s: 'West Bengal fire and rescue', cls: 'dial--fire' }
   ];
 

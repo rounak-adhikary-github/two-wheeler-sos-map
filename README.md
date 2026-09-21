@@ -17,51 +17,70 @@ handlebar mount. Every design decision follows from that.
 | **Tap to Navigate** | Hands `lat,lng` to the native Google Maps app with `dir_action=navigate`, so turn-by-turn starts immediately |
 | **Call the shop** | Every listing with a published number has a live CALL button. The two without one are visibly disabled |
 | **Brand filter** | One tile per manufacturer — Hero, Honda, TVS, Bajaj, Enfield, Yamaha, Suzuki, KTM. Pick your bike, see who services it |
-| **Need filter** | Category tiles for Mechanics and Towing. Empty categories are hidden rather than shown as dead ends |
+| **Need filter** | Category tiles for Mechanics, Towing, Tyre/Air, Battery, Structure and Controls. Empty categories are hidden rather than shown as dead ends |
 | **Nearest-first** | One tap on ◎ sorts everything by real distance from your position |
 | **Swipe-over-tap panel** | Three-state bottom sheet you can flick open with a thumb; chevrons as a fallback |
 | **Offline shell** | A service worker caches the app and any map tiles you have already viewed |
 | **Day / night** | Auto-selects by time of day, manual toggle in the header |
-| **Emergency panel** | 112 / 100 / 108 / 1073 / 101 plus Hero / Honda / TVS / Bajaj / Royal Enfield helplines, and "send my pin by SMS" |
+| **Emergency panel** | 112 / 100 / 108 / 1073 / 1033 / 101 plus Hero / Honda / TVS / Bajaj / Royal Enfield helplines, and "send my pin by SMS" |
 
 ## Coverage
 
-**125 real listings. No fabricated records.** Every entry is a genuine business with a real
+**170 real listings. No fabricated records.** Every entry is a genuine business with a real
 street address and a phone number printed exactly as its source published it. There is no
 placeholder or sample data anywhere in the project.
 
-| Brand | Listings |
+| Group | Listings |
 |---|---|
 | Royal Enfield | 26 |
+| **Independent local workshops** | **22** |
 | Bajaj | 21 |
 | Hero MotoCorp | 18 |
 | TVS | 15 |
-| Honda | 14 |
+| Honda | 15 |
 | Yamaha | 13 |
 | Suzuki | 12 |
+| **24x7 towing / recovery** | **10** |
+| **Tyre / puncture shops** | **7** |
+| **Battery dealers (Exide, Amaron)** | **5** |
+| Spare-parts shops | 3 |
 | KTM | 3 |
-| 24x7 towing operators | 3 |
 
-Spread across the metro: Barrackpore and Barasat in the north, Baruipur and Budge Budge in the
-south, Serampore and Dankuni on the west bank, New Town and Hatiara in the east.
+169 of the 170 have a published phone number, so CALL is live on them. Only Honda BigWing
+Topline South has none, and keeps a visibly disabled button.
+
+Spread across 92 localities: Barrackpore and Barasat in the north, Baruipur and Budge Budge in
+the south, Serampore and Dankuni on the west bank, New Town and Hatiara in the east.
 
 ### Where the data came from
-
-Captured **18 September 2026** from:
 
 - **Manufacturer authorised-service-centre directories** — Hero MotoCorp's official ASC
   directory, and the public authorised-dealer directories for Honda, TVS, Bajaj, Royal
   Enfield, Yamaha, Suzuki and KTM. The Royal Enfield entries come from Royal Enfield's own
-  dealer locator.
-- **Operators' own websites** for the towing services.
+  dealer locator. *(captured 18 Sep 2026)*
+- **Public business directory listings** for the first batch of independent workshops.
+  *(captured 21 Sep 2026)*
+- **Google Maps place listings** for the tyre shops, battery dealers, spare-parts shops, most
+  of the towing operators and the second batch of workshops. *(captured 21 Sep 2026)*
+- **Operators' own websites** for the national roadside-assistance services.
 
-Every record stores its `src`, and the detail panel shows it. These are businesses that
-publish their numbers specifically so customers can call them.
+Every record stores its `src`, and the detail panel shows it.
 
-> **What is deliberately NOT here:** phone numbers for independent local garages and puncture
-> shops. I could not verify them, and a wrong number sends a stranded rider to a stranger —
-> the exact harm this app exists to prevent. Those categories show as hidden filters rather
-> than as invented listings. Add them yourself as you confirm them (see below).
+### About the opening hours
+
+Thirteen listings are confirmed **open 24 hours** by their source, so those carry real hours
+and show a green dot. Everything else has an **unknown opening time** — Maps will report
+"closes at 7 PM" but not when a shop opens, and a closing time alone cannot tell you whether
+a place is open right now. So those records keep `hours: null`, show a yellow dot, and say
+`CALL AHEAD`. The closing time is recorded in the note as a listing fact, not as a live claim.
+
+### A note on using Google Maps data
+
+The Maps-sourced records were read from publicly visible place listings. Google's terms
+restrict scraping and bulk redistribution of Maps content, and place data goes stale. For a
+personal or community project this is low-risk, but **if you intend to run this at any scale,
+replace those records with numbers you collected yourself or licensed from a provider.** The
+manufacturer-directory records do not carry that caveat.
 
 > **Opening hours are not published by these sources, so the app does not guess.** Every pin
 > shows a **yellow** dot and `CALL AHEAD` instead of a made-up open/closed state. A red dot
@@ -239,9 +258,10 @@ No build step. Edit a file, refresh the page.
 
 ## Known limitations
 
-- **No puncture shops, tyre dealers or air points.** I could not verify phone numbers for
-  those categories, so rather than invent them the app hides the empty filters. This is the
-  biggest gap in the dataset — see *Adding a place* above.
+- **Google Maps is the source for 33 of the 170 records.** See the note above — fine for a
+  community project, but licence or re-collect before running this at scale.
+- **Opening hours are unknown for 157 of the 170 records**, so they read `CALL AHEAD`. Only
+  the confirmed 24-hour places show a live open state. This is honest, not a bug.
 - **Navigation handoff requires the Google Maps app.** Without it, the link opens in the
   browser instead. Everything else works offline.
 - **Listings go stale.** Numbers change and branches close. There is no backend and nothing
