@@ -64,6 +64,16 @@ coordinates to the native Google Maps app in one tap. Hosted free on GitHub Page
 - Sheet is swiped, not tapped. Chevrons exist only as a fallback.
 - Map shows the road network only. No POI labels. Oversized circular badges, not teardrops.
 
+## Credits / support block
+- `supportHtml()` in app.js renders the credit + UPI + WhatsApp + Instagram block. It is shown
+  in **two** places: the end of the results list (`renderList`) and the Help panel
+  (`#support-slot`, filled at boot). Edit the four constants at the top of the SUPPORT section
+  (`UPI_NUMBER`, `WHATSAPP_URL`, `INSTAGRAM_HANDLE`, `INSTAGRAM_URL`) — one source of truth.
+- UPI is **tap-to-copy, not a `upi://` deep link.** A deep link needs a full VPA handle
+  (`@ybl`, `@okaxis` …) and the handle decides where the money lands; guessing one could
+  misdirect a payment. Do not "improve" this into a deep link.
+- `.btn` forces uppercase — `.support__ig .btn__txt` overrides it so the handle keeps its case.
+
 ## Gotchas already paid for
 - Leaflet `_getSubdomain` throws when `subdomains` is omitted. Always pass a string.
 - Do not apply `contrast()` filters to the light basemap — it erases the road network.

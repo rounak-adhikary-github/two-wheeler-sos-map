@@ -845,6 +845,63 @@ body { -webkit-user-select: none; user-select: none; }
 .toast[hidden] { display: none; }
 @keyframes toastin { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
+/* ------------------------------------------------------ 16. SUPPORT BLOCK */
+/* Credit + funding + social. Rendered at the end of the results list and again
+   in the About panel. Buttons stack full-width so they stay >=64px tall and
+   never truncate the handle on a 320px screen. */
+.support {
+  margin: 20px 0 6px;
+  padding: 0 12px 12px;
+  background: var(--surface-2);
+  border: var(--bw) solid var(--edge);
+  border-radius: var(--r);
+  border-top: 12px solid var(--hi-vis);
+  overflow: hidden;
+}
+.support__kicker {
+  margin: 12px 0 10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.support__by {
+  margin: 0 0 5px;
+  font-size: 14px;
+  color: var(--ink-dim);
+}
+.support__by b {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 21px;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-top: 2px;
+}
+.support__ask {
+  margin: 0 0 13px;
+  font-size: 14px;
+}
+.support__upi { margin-bottom: 0; }
+.support__upi .btn__txt { font-size: 15px; }
+.support__hint {
+  margin: 8px 0 15px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--ink-dim);
+}
+.support__row { display: grid; gap: 10px; }
+.support__row .btn { margin-bottom: 0; font-size: 17px; }
+.support__wa { background: #25D366; color: var(--edge); }
+.support__ig { background: #C13584; color: #FFFFFF; }
+/* The handle is displayed exactly as written - .btn uppercases by default,
+   and a capitalised handle reads wrong on a social link. */
+.support__ig .btn__txt { text-transform: none; letter-spacing: .02em; font-size: 18px; }
+
 /* -------------------------------------------------------- 16. ACCESSIBILITY */
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }

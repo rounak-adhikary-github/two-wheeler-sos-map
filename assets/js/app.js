@@ -20,6 +20,8 @@
     parking: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4.5"/><path d="M9.4 17.2V6.8h3.3a3.1 3.1 0 0 1 0 6.2H9.4"/></svg>',
     mechanic: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.6 19.1 13.5 10c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6.1 6 9.1 1.7 4.8C.5 7.2 1 10.2 3 12.2c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.2-2.2c.4-.5.4-1.1 0-1.5z"/></svg>',
     battery: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="2.4" y="7" width="16.2" height="11" rx="2.6"/><path d="M18.6 10.4h1.6a1.2 1.2 0 0 1 1.2 1.2v1.8a1.2 1.2 0 0 1-1.2 1.2h-1.6" fill="currentColor" stroke="none"/><path d="M11.6 9.3 8.9 12.8h2.9l-1.6 3.1" stroke-linecap="round"/></svg>',
+    instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5.2"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1.25" fill="currentColor" stroke="none"/></svg>',
+    whatsapp: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.5 1.3 5L2 22l5.1-1.3c1.4.8 3.1 1.2 4.9 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3c-.8-1.3-1.3-2.9-1.3-4.5 0-4.5 3.7-8.2 8.2-8.2s8.2 3.7 8.2 8.2-3.5 8.3-8 8.3z"/><path d="M17.5 14.4c-.3-.2-1.7-.9-2-1-.3-.1-.5-.2-.7.1s-.8 1-.9 1.2c-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.5-.6c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.8-2c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.4-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3.1 4.9 4.2 2.4.9 2.9.7 3.4.7.5-.1 1.7-.7 1.9-1.3.2-.7.2-1.2.2-1.3-.1-.2-.3-.2-.6-.4z"/></svg>',
 
     navigate: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.1 3.1 21.6l8.9-4.3 8.9 4.3z"/></svg>',
     phone: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.7 10.9a15.1 15.1 0 0 0 6.4 6.4l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.58 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.4 11.4 0 0 0 .58 3.6 1 1 0 0 1-.25 1z"/></svg>',
@@ -457,6 +459,48 @@
     map.flyTo(center, targetZ, { duration: 0.6 });
   }
 
+  /* ------------------------------------------------------------- SUPPORT */
+  /* One block, rendered at the end of the results list and again in the About
+     panel, so it is reachable whether you scroll the list or open Help.
+
+     The UPI number is copy-to-clipboard rather than a upi:// deep link. A UPI
+     deep link needs a VPA handle (@ybl, @okaxis ...) and guessing one would
+     send money to a stranger. The bare number works in every UPI app. */
+  var UPI_NUMBER = '8017414711';
+  var WHATSAPP_URL = 'https://wa.me/91' + UPI_NUMBER;
+  var INSTAGRAM_HANDLE = 'ig_chromozome';
+  var INSTAGRAM_URL = 'https://instagram.com/' + INSTAGRAM_HANDLE;
+
+  function supportHtml() {
+    return '<div class="support">' +
+      '<p class="support__kicker">Support this project</p>' +
+      '<p class="support__by">Created by <b>Rounak Adhikary</b></p>' +
+      '<p class="support__ask">Buy a coffee to support such projects</p>' +
+
+      '<button type="button" class="btn btn--ghost btn--sm support__upi" data-copy="' + UPI_NUMBER + '">' +
+        '<span class="btn__ico">' + svg('copy') + '</span>' +
+        '<span class="btn__txt">GPay / PhonePe / UPI \u2014 ' + UPI_NUMBER + '</span>' +
+      '</button>' +
+      '<p class="support__hint">Tap to copy, then paste into GPay or PhonePe.</p>' +
+
+      '<div class="support__row">' +
+        '<a class="btn support__wa" href="' + WHATSAPP_URL + '" target="_blank" rel="noopener">' +
+          '<span class="btn__ico">' + svg('whatsapp') + '</span>' +
+          '<span class="btn__txt">WhatsApp</span></a>' +
+        '<a class="btn support__ig" href="' + INSTAGRAM_URL + '" target="_blank" rel="noopener">' +
+          '<span class="btn__ico">' + svg('instagram') + '</span>' +
+          '<span class="btn__txt">@' + INSTAGRAM_HANDLE + '</span></a>' +
+      '</div>' +
+    '</div>';
+  }
+
+  /* Delegated, because the block is re-rendered along with the list. */
+  function handleCopyClick(e) {
+    var b = e.target.closest('[data-copy]');
+    if (!b) return;
+    copyText(b.getAttribute('data-copy'), 'UPI NUMBER COPIED');
+  }
+
   /* ---------------------------------------------------------------- FILTER */
   var noFilter = function () { return state.cat === 'all' && !state.brand; };
 
@@ -580,10 +624,12 @@
       html += '<button type="button" class="btn btn--ghost btn--sm" id="btn-more">' +
         'SHOW ' + Math.min(LIST_PAGE, left) + ' MORE — ' + left + ' LEFT</button>';
     }
+    html += supportHtml();
     viewList.innerHTML = html;
   }
 
   viewList.addEventListener('click', function (e) {
+    if (e.target.closest('[data-copy]')) { handleCopyClick(e); return; }
     var c = e.target.closest('.card');
     if (c) { select(c.getAttribute('data-id')); return; }
     if (e.target.closest('#btn-more')) {
@@ -1062,6 +1108,10 @@
     copyText(t, 'COORDINATES COPIED');
   });
 
+  modal.addEventListener('click', function (e) {
+    if (e.target.closest('[data-copy]')) handleCopyClick(e);
+  });
+
   $('helpline-list').addEventListener('click', function (e) {
     var b = e.target.closest('.dial');
     if (b) window.location.href = 'tel:' + b.getAttribute('data-tel');
@@ -1141,6 +1191,7 @@
     initTheme();
     renderEmergency();
     renderHelplines();
+    $('support-slot').innerHTML = supportHtml();
     renderRail();
     buildMarkers();
     layoutPins();

@@ -34,7 +34,7 @@
 window.SOS_DATA = {
   meta: {
     city: 'KOLKATA',
-    updated: '2026-09-18',
+    updated: '2026-09-21',
     // Metro Kolkata - the map is hard-locked inside these bounds so riders
     // never get lost panning into empty map.
     center: [22.5726, 88.3639],

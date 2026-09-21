@@ -21,6 +21,7 @@ handlebar mount. Every design decision follows from that.
 | **Nearest-first** | One tap on ◎ sorts everything by real distance from your position |
 | **Swipe-over-tap panel** | Three-state bottom sheet you can flick open with a thumb; chevrons as a fallback |
 | **Four ways out of a place** | Red ✕ in the panel bar, tap anywhere on the map, BACK TO LIST inside the details, or Escape on a keyboard |
+| **Support block** | Credit, UPI, WhatsApp and Instagram, at the end of the results list and in the Help panel |
 | **Offline shell** | A service worker caches the app and any map tiles you have already viewed |
 | **Day / night** | Auto-selects by time of day, manual toggle in the header |
 | **Emergency panel** | 112 / 100 / 108 / 1073 / 1033 / 101 plus Hero / Honda / TVS / Bajaj / Royal Enfield helplines, and "send my pin by SMS" |
@@ -253,6 +254,25 @@ The provider is swappable in one place — the `PROVIDERS` object at the top of
    another region, review the applicable map-data regulations for that region first.
 
 ---
+
+## Credits and support
+
+At the end of the results list — and again in the Help panel — there is a support block:
+
+- **Created by Rounak Adhikary**
+- **UPI / GPay / PhonePe — 8017414711**, as a tap-to-copy button
+- **WhatsApp** → `wa.me/918017414711`
+- **Instagram** → `@ig_chromozome`
+
+To change any of it, edit the four constants at the top of the `SUPPORT` section in
+`assets/js/app.js` (`UPI_NUMBER`, `WHATSAPP_URL`, `INSTAGRAM_HANDLE`, `INSTAGRAM_URL`) and the
+copy in `supportHtml()` just below. It is rendered in both places from that one function.
+
+> **Why the UPI number is copy-to-clipboard and not a `upi://` link.** A UPI deep link needs a
+> full VPA — `8017414711@ybl`, `@okaxis`, and so on — and the handle decides where the money
+> actually goes. Guessing one would risk sending a stranger's payment into the void. The bare
+> number works in every UPI app via "pay to mobile number", so the button copies it and the
+> hint says to paste it in.
 
 ## Files
 
