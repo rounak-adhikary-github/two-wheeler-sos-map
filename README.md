@@ -20,9 +20,25 @@ handlebar mount. Every design decision follows from that.
 | **Need filter** | Category tiles for Mechanics, Towing, Tyre/Air, Battery, Structure and Controls. Empty categories are hidden rather than shown as dead ends |
 | **Nearest-first** | One tap on ◎ sorts everything by real distance from your position |
 | **Swipe-over-tap panel** | Three-state bottom sheet you can flick open with a thumb; chevrons as a fallback |
+| **Four ways out of a place** | Red ✕ in the panel bar, tap anywhere on the map, BACK TO LIST inside the details, or Escape on a keyboard |
 | **Offline shell** | A service worker caches the app and any map tiles you have already viewed |
 | **Day / night** | Auto-selects by time of day, manual toggle in the header |
 | **Emergency panel** | 112 / 100 / 108 / 1073 / 1033 / 101 plus Hero / Honda / TVS / Bajaj / Royal Enfield helplines, and "send my pin by SMS" |
+
+### Getting back out of a place
+
+Selecting a place peeks the panel at head height only — so the `BACK TO LIST` button inside the
+scrolled detail content is off-screen and useless as an escape. There are four ways back:
+
+1. **The red ✕** in the panel bar. Always visible while a place is selected, 64×64px, and
+   placed last in the bar so it is the control nearest a right thumb.
+2. **Tap anywhere on the map.** Leaflet does not fire `click` after a drag, so panning will not
+   trip it, and pin clicks are stopped from bubbling so selecting never deselects itself.
+3. **BACK TO LIST**, inside the detail, for when the panel is expanded.
+4. **Escape**, if there is a keyboard attached.
+
+The ✕ is hidden again when nothing is selected, and the collapse chevron is hidden while a
+place is selected so the bar does not crowd on a 320px screen.
 
 ## Coverage
 

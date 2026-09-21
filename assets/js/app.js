@@ -304,7 +304,10 @@
       '<span>' + esc(p.name) + '</span>',
       { permanent: true, direction: 'top', offset: [0, -24], className: 'pin-lbl', opacity: 1 }
     );
-    m.on('click', function () { select(p.id); });
+    m.on('click', function (e) {
+      L.DomEvent.stopPropagation(e); /* or the map's click would deselect at once */
+      select(p.id);
+    });
     return m;
   }
 
@@ -420,7 +423,8 @@
           iconAnchor: [27, 27]
         }),
         keyboard: false
-      }).on('click', function () {
+      }).on('click', function (e) {
+        L.DomEvent.stopPropagation(e);
         map.flyTo([c.lat, c.lng], Math.min(D.meta.maxZoom, z + 2), { duration: .5 });
       }).addTo(clusterLayer);
     });
@@ -678,6 +682,8 @@
     sheetScroll.scrollTop = 0;
 
     sheetTitle.textContent = p.name;
+    $('sheet-close').hidden = false;
+    $('snap-down').hidden = true;  /* keep the bar uncrowded on small screens */
     dock.hidden = false;
     syncCallButton(p);
     document.documentElement.style.setProperty('--dock-h', dock.offsetHeight + 'px');
@@ -694,6 +700,8 @@
     viewDetail.hidden = true;
     viewList.hidden = false;
     sheetTitle.textContent = 'NEAREST PLACES';
+    $('sheet-close').hidden = true;
+    $('snap-down').hidden = false;
     dock.hidden = true;
     document.documentElement.style.setProperty('--dock-h', '0px');
     layoutPins();
@@ -864,6 +872,20 @@
     var order = ['full', 'half', 'peek'];
     var i = order.indexOf(state.snap);
     setSnap(order[Math.min(order.length - 1, i + 1)], true);
+  });
+
+  /* The escape hatch. When a place is selected the sheet peeks at head height
+     only, so the BACK TO LIST button inside the scrolled detail content is
+     off-screen — this is the control that is always reachable. */
+  $('sheet-close').addEventListener('click', function (e) {
+    e.stopPropagation();
+    deselect();
+  });
+
+  /* Tapping the map itself also clears the selection. Leaflet does not fire
+     click after a drag, so panning will not trip this. */
+  map.on('click', function () {
+    if (state.sel) deselect();
   });
 
   /* ------------------------------------------------------------- GEO / SOS */

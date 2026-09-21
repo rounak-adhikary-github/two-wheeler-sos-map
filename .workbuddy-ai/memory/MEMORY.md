@@ -69,6 +69,14 @@ coordinates to the native Google Maps app in one tap. Hosted free on GitHub Page
 - Do not apply `contrast()` filters to the light basemap — it erases the road network.
 - The action dock overlays the sheet; peek offset must include `dock.offsetHeight`.
 - `setPointerCapture` / `preventDefault` on `pointerdown` break clicks on nested buttons.
+- **Marker and cluster clicks need `L.DomEvent.stopPropagation(e)`** now that the map's own
+  click deselects. Without it, tapping a pin selects and deselects in the same gesture.
+- **Every escape route must live in the sheet HEAD.** The sheet peeks at head height, so
+  anything inside the scrolled detail content (e.g. `BACK TO LIST`) is off-screen and cannot be
+  used to get out. Hence `#sheet-close`.
+- A "minimised" 4th snap state is not viable: the sheet is `bottom:0` + `translateY`, so the
+  visible slice is always the sheet's top — anything shorter than the head shows half-cut
+  buttons.
 
 ## Open items
 - Every record is still seed data. Replace with consented real shops before publishing.

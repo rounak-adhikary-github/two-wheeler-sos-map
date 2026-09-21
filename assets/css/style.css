@@ -483,6 +483,28 @@ body { -webkit-user-select: none; user-select: none; }
 .snapbtn span { width: 24px; height: 24px; }
 .snapbtn:active { background: var(--surface-3); }
 
+/* Close-and-go-back-to-the-map. Sits last in the bar so it is the control
+   closest to a right thumb. This is the escape hatch from a selected place:
+   the sheet peeks at only its head height, so anything inside the scrolled
+   detail content is off-screen and useless as a way out. */
+.sheetclose {
+  width: var(--tap); height: var(--tap);
+  flex: 0 0 auto;
+  display: grid; place-items: center;
+  background: var(--alert);
+  color: #fff;
+  border: var(--bw) solid var(--edge);
+  border-radius: 10px;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, .45);
+  transition: transform .06s linear, box-shadow .06s linear;
+}
+.sheetclose:active { transform: translateY(4px); box-shadow: none; }
+.sheetclose span { width: 28px; height: 28px; }
+.sheetclose[hidden] { display: none; }
+.snapbtn[hidden] { display: none; }
+
 .sheet__scroll {
   flex: 1 1 auto;
   overflow-y: auto;
